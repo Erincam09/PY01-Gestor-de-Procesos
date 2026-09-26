@@ -1,7 +1,9 @@
 package modelo;
 
+import java.util.ArrayList;
+
 public class BCP {
-    private int pid;
+    private final int pid;
     private String estado;
     private int pc;
     private int ac;
@@ -9,20 +11,63 @@ public class BCP {
     private int bx;
     private int cx;
     private int dx;
-    private int inicioM;
-    private int finalM;
+    private String ir;
+    private final int base;
+    private final int alcance;
+    //pila
+    private ArrayList<Integer> pila;
+    //informacion contable
+    private int cpu;
+    private int tiempoInicio;
+    private int tiempoEmpleado;
+    //Estado E/S
+    private ArrayList<String> archivosAbiertos;
+    //Siguiente BCP
+    private int siguienteBCP;
+    //prioridad
+    private int prioridad;
 
-    public BCP(int pid, String estado, int pc, int ac, int ax, int bx, int cx, int dx, int inicioM, int finalM) {
+    public BCP(int pid, String estado, int base, int alcance, int prioridad) {
         this.pid = pid;
         this.estado = estado;
-        this.pc = pc;
-        this.ac = ac;
-        this.ax = ax;
-        this.bx = bx;
-        this.cx = cx;
-        this.dx = dx;
-        this.inicioM = inicioM;
-        this.finalM = finalM;
+        this.pc = base;
+        this.ac = 0;
+        this.ax = 0;
+        this.bx = 0;
+        this.cx = 0;
+        this.dx = 0;
+        this.ir = "";
+        this.base = base;
+        this.alcance = alcance;
+        this.pila = new ArrayList<>();
+        this.archivosAbiertos = new ArrayList<>();
+        this.siguienteBCP = -1;
+        this.prioridad = prioridad;
+        this.cpu = -1;
+        this.tiempoInicio = 0;
+        this.tiempoEmpleado = 0;
+    }
+
+    public void pushPila(int valor) {
+        if (pila.size() >= 5) {
+            throw new IllegalStateException("La pila está llena (Desbordamiento de pila)");
+        }
+        pila.add(valor);
+    }
+
+    public int popPila() {
+        if (pila.isEmpty()) {
+            throw new IllegalStateException("La pila está vacía");
+        }
+        return pila.remove(pila.size() - 1);
+    }
+
+    public void agregarArchivoAbierto(String archivo) {
+        archivosAbiertos.add(archivo);
+    }
+
+    public void eliminarArchivoAbierto(String archivo) {
+        archivosAbiertos.remove(archivo);
     }
 
     public int getPid() {
@@ -57,12 +102,12 @@ public class BCP {
         return dx;
     }
 
-    public int getInicioM() {
-        return inicioM;
+    public int getBase() {
+        return base;
     }
 
-    public int getFinalM() {
-        return finalM;
+    public int getAlcance() {
+        return alcance;
     }
 
     public void setEstado(String estado) {
@@ -91,5 +136,61 @@ public class BCP {
 
     public void setDx(int dx) {
         this.dx = dx;
+    }
+
+    public String getIr() {
+        return ir;
+    }
+
+    public void setIr(String ir) {
+        this.ir = ir;
+    }
+
+    public ArrayList<Integer> getPila() {
+        return pila;
+    }
+
+    public ArrayList<String> getArchivosAbiertos() {
+        return archivosAbiertos;
+    }
+
+    public int getSiguienteBCP() {
+        return siguienteBCP;
+    }
+
+    public void setSiguienteBCP(int siguienteBCP) {
+        this.siguienteBCP = siguienteBCP;
+    }
+
+    public int getPrioridad() {
+        return prioridad;
+    }
+
+    public void setPrioridad(int prioridad) {
+        this.prioridad = prioridad;
+    }
+
+    public int getCpu() {
+        return cpu;
+    }
+
+    public void setCpu(int cpu) {
+        this.cpu = cpu;
+    }
+
+    public int getTiempoInicio() {
+        return tiempoInicio;
+    }
+
+    public void setTiempoInicio(int tiempoInicio) {
+        this.tiempoInicio = tiempoInicio;
+    }
+
+    public int getTiempoEmpleado() {
+        return tiempoEmpleado;
+    }
+
+    public void setTiempoEmpleado(int tiempoEmpleado) {
+        this.tiempoEmpleado = tiempoEmpleado;
     }
 }
