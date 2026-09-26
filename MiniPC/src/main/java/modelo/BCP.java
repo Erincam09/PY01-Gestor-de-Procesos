@@ -18,8 +18,8 @@ public class BCP {
     private ArrayList<Integer> pila;
     //informacion contable
     private int cpu;
-    private int tiempoInicio;
-    private int tiempoEmpleado;
+    private long tiempoInicio;
+    private long tiempoEmpleado;
     //Estado E/S
     private ArrayList<String> archivosAbiertos;
     //Siguiente BCP
@@ -178,19 +178,19 @@ public class BCP {
         this.cpu = cpu;
     }
 
-    public int getTiempoInicio() {
+    public long getTiempoInicio() {
         return tiempoInicio;
     }
 
-    public void setTiempoInicio(int tiempoInicio) {
+    public void setTiempoInicio(long tiempoInicio) {
         this.tiempoInicio = tiempoInicio;
     }
 
-    public int getTiempoEmpleado() {
+    public long getTiempoEmpleado() {
         return tiempoEmpleado;
     }
 
-    public void setTiempoEmpleado(int tiempoEmpleado) {
+    public void setTiempoEmpleado(long tiempoEmpleado) {
         this.tiempoEmpleado = tiempoEmpleado;
     }
 }

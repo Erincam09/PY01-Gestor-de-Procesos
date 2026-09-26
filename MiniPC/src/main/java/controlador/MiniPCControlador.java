@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import modelo.Instruccion;
-import auxiliares.InstruccionABinario;
 
 /**
  *
@@ -34,7 +33,6 @@ public class MiniPCControlador {
     private int limitePrograma;
     private int pid;
     private int numeroProceso;
-    private InstruccionABinario codificador;
     
     public MiniPCControlador(int tamanioMemoria) {
         cpu = new CPU();
@@ -48,7 +46,6 @@ public class MiniPCControlador {
         inicioPrograma = espacioKernel;
         pid = 1;
         numeroProceso = 0;
-        codificador = new InstruccionABinario();
     }
     
     public void cargarPrograma(File archivo) throws IOException {
@@ -60,7 +57,7 @@ public class MiniPCControlador {
         limitePrograma =inicioPrograma + programa.getCantInstrucciones() - 1;
         cpu.setPC(inicioPrograma);
         cargadorMemoria.cargar(programa,memoria,inicioPrograma);
-        manejadorBCP.crearBCP(memoria, numeroProceso, pid, "LISTO", cpu, inicioPrograma, limitePrograma);
+        manejadorBCP.crearBCP(memoria, pid, "LISTO", cpu, inicioPrograma, limitePrograma, 1);
     }
     
     public void ejecutarSiguiente() {
@@ -74,9 +71,9 @@ public class MiniPCControlador {
         Instruccion instruccion = programa.getInstrucciones().get(indice);
         manejadorIns.ejecutar(instruccion);
         if (cpu.getPC() > limitePrograma) {
-            manejadorBCP.actualizarBCP(memoria,numeroProceso,pid,"FINALIZADO",cpu,inicioPrograma,limitePrograma);
+            manejadorBCP.actualizarBCP(memoria,numeroProceso,"FINALIZADO",cpu);
         } else {
-            manejadorBCP.actualizarBCP(memoria,numeroProceso,pid,"EJECUTANDO",cpu,inicioPrograma,limitePrograma);
+            manejadorBCP.actualizarBCP(memoria,numeroProceso,"EJECUTANDO",cpu);
         }
     }
 
@@ -86,10 +83,7 @@ public class MiniPCControlador {
         }
         return cpu.getPC() > limitePrograma;
     }
-    
-    public String obtenerBinario(Instruccion instruccion) {
-        return codificador.cambiarABinario(instruccion);
-    }
+
     
     public void reiniciarPrograma() {
         if (programa == null) {
@@ -99,7 +93,7 @@ public class MiniPCControlador {
         memoria.limpiar();
         cpu.setPC(inicioPrograma);
         cargadorMemoria.cargar(programa,memoria,inicioPrograma);
-        manejadorBCP.crearBCP(memoria,numeroProceso,pid,"LISTO",cpu,inicioPrograma,limitePrograma);
+        manejadorBCP.crearBCP(memoria,pid,"LISTO",cpu,inicioPrograma,limitePrograma,1);
     }
 
     public CPU getCpu() {

@@ -803,13 +803,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         if (controlador.getPrograma() == null) {
             return;
         }
-        int direccion = controlador.getInicioPrograma();
-        for (Instruccion instruccion : controlador.getPrograma().getInstrucciones()) {
-            String binario = controlador.obtenerBinario(instruccion);
-            Object[] fila = {direccion,instruccion.getEntradaTexto(),binario};
-            modeloTabla.addRow(fila);
-            direccion++;
-        }
     }
     
     private void actualizarBCP() {
