@@ -33,6 +33,9 @@ public class ParserInstrucciones {
     }
 
     private Instruccion analizarLinea(String linea, int numeroLinea) {
+        if (!formatoValido(linea)) {
+            throw new IllegalArgumentException("Línea " + numeroLinea + " con formato inválido: " + linea);
+        }
         String textoOriginal = linea;
         linea = linea.replace(",", "");
         while (linea.contains("  ")) {
@@ -40,39 +43,87 @@ public class ParserInstrucciones {
         }
         String[] partes = linea.split(" ");
         String operacion = partes[0].toUpperCase();
-        if (operacion.equals("MOV")) {
-            return analizarMov(linea, partes, numeroLinea);
+        if (operacion.equals("LOAD") || operacion.equals("STORE") || operacion.equals("ADD") || operacion.equals("SUB") || operacion.equals("PUSH") || operacion.equals("POP")) {
+            return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), null);
         }
-        if (operacion.equals("LOAD") || operacion.equals("STORE") || operacion.equals("ADD") || operacion.equals("SUB")) {
-            return analizarOperacion(linea, partes, numeroLinea);
+        if (operacion.equals("MOV") || operacion.equals("SWAP") || operacion.equals("CMP")) {
+            return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), partes[2].toUpperCase());
+        }
+        if (operacion.equals("INC") || operacion.equals("DEC")) {
+            if (partes.length == 1) {
+                return new Instruccion(textoOriginal, operacion, null, null);
+            }
+            return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), null);
+        }
+        if (operacion.equals("JMP") || operacion.equals("JE") || operacion.equals("JNE")) {
+            return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), null);
+        }
+        if (operacion.equals("INT")) {
+            return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), null);
+        }
+        if (operacion.equals("PARAM")) {
+            return analizarParametros(textoOriginal, partes);
         }
         throw new IllegalArgumentException("Línea "+ numeroLinea+ ": operación inválida.");
     }
 
-    private Instruccion analizarMov(String linea, String[] partes, int numeroLinea) {
-        if (partes.length != 3) {
-            throw new IllegalArgumentException("Línea " + numeroLinea + ": formato MOV inválido.");
+    private boolean formatoValido(String linea) {
+        // LOAD AX
+        // STORE BX
+        // ADD CX
+        // SUB DX
+        // PUSH AX
+        // POP BX
+        if (linea.matches("(?i)^(LOAD|STORE|ADD|SUB|PUSH|POP)\\s+(AX|BX|CX|DX)$")) {
+            return true;
         }
-        String registro = partes[1];
-        int valor;
-        try {
-            valor = Integer.parseInt(partes[2]);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Línea " + numeroLinea + ": el valor debe ser un número entero.");
+        // MOV AX, 5
+        // MOV AX, -5
+        // MOV AX, BX
+        if (linea.matches("(?i)^MOV\\s+(AX|BX|CX|DX)\\s*,\\s*((AX|BX|CX|DX)|[+-]?\\d+)$")) {
+            return true;
         }
-        if (valor < -127 || valor > 127) {
-            throw new IllegalArgumentException("Línea " + numeroLinea + ": el valor debe estar entre -127 y 127.");
+        // SWAP AX, BX
+        // CMP AX, BX
+        if (linea.matches("(?i)^(SWAP|CMP)\\s+(AX|BX|CX|DX)\\s*,\\s*(AX|BX|CX|DX)$")) {
+            return true;
         }
-
-        return new Instruccion(linea, partes[0], registro, valor);
+        // INC
+        // INC AX
+        // DEC
+        // DEC AX
+        if (linea.matches("(?i)^(INC|DEC)(\\s+(AX|BX|CX|DX))?$")) {
+            return true;
+        }
+        // INT 20H
+        // INT 10H
+        // INT 09H
+        // INT 21H
+        if (linea.matches("(?i)^INT\\s+(20H|10H|09H|21H)$")) {
+            return true;
+        }
+        // JMP +3
+        // JMP -4
+        // JE +2
+        // JNE -5
+        if (linea.matches("(?i)^(JMP|JE|JNE)\\s+[+-]?\\d+$")) {
+            return true;
+        }
+        // PARAM 5
+        // PARAM 5, 8
+        // PARAM 5, 8, 10
+        if (linea.matches("(?i)^PARAM\\s+[+-]?\\d+(\\s*,\\s*[+-]?\\d+){0,2}$")) {
+            return true;
+        }
+        return false;
     }
 
-    private Instruccion analizarOperacion(String linea, String[] partes, int numeroLinea) {
-        if (partes.length != 2) {
-            throw new IllegalArgumentException("Línea " + numeroLinea + ": formato inválido.");
+    private Instruccion analizarParametros(String textoOriginal, String[] partes) {
+        Instruccion instruccion = new Instruccion(textoOriginal, "PARAM", null, null);
+        for (int i = 1; i < partes.length; i++) {
+            int valor = Integer.parseInt(partes[i]);
+            instruccion.agregarParametro(valor);
         }
-        String operacion = partes[0];
-        String registro = partes[1];
-        return new Instruccion(linea, operacion, registro, null);
+        return instruccion;
     }
 }
