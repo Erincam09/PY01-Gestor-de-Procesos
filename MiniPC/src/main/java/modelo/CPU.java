@@ -21,6 +21,7 @@ public class CPU {
     private int PC;
     //Instruction Register
     private String IR;
+    private boolean comparacionIgual;
     
     public CPU(){
         reiniciar();
@@ -35,6 +36,7 @@ public class CPU {
         DX = 0;
         PC = 0;
         IR = "";
+        comparacionIgual = false;
     }
     
     public int getRegistro(String registro) {
@@ -87,5 +89,13 @@ public class CPU {
     
     public int getAC() {
         return AC;
+    }
+
+    public boolean isComparacionIgual() {
+        return comparacionIgual;
+    }
+
+    public void setComparacionIgual(boolean comparacionIgual) {
+        this.comparacionIgual = comparacionIgual;
     }
 }
