@@ -13,18 +13,13 @@ import java.util.Arrays;
 public class Memoria {
     private String[] memoriaP;
     private int espacioKernel;
-    private int tamanio;
     
-    public Memoria(int tamanio, int espacioKernel) {
+    public Memoria(int tamanio) {
         if (tamanio < 128) {
             throw new IllegalArgumentException("La memoria debe ser mínimo de 128");
         }
-        if (espacioKernel<= 0 || espacioKernel >= tamanio) {
-            throw new IllegalArgumentException("El espacio de kernel ingresado es inválido.");
-        }
-        this.tamanio = tamanio;
         this.memoriaP = new String[tamanio];
-        this.espacioKernel = espacioKernel;
+        espacioKernel = tamanio/4;
     }
     
     public void escribir(int espacio, String contenido) {
@@ -42,9 +37,36 @@ public class Memoria {
             throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
         }
     }
+
+    public boolean estaLibre(int espacio) {
+        if (espacio >= 0 && espacio < memoriaP.length) {
+            return memoriaP[espacio] == null;
+        } else {
+            throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
+        }
+    }
+
+    public void liberar(int espacio) {
+        if (espacio >= 0 && espacio < memoriaP.length) {
+            memoriaP[espacio] = null;
+        } else {
+            throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
+        }
+    }
     
+    public void liberarProceso(int base, int alcance) {
+        if (base < espacioKernel || base > memoriaP.length) {
+            throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
+        }
+        if (base + alcance > memoriaP.length) {
+            throw new IllegalArgumentException("El alcance del proceso excede la memoria disponible.");
+        }
+        for (int i = base; i < base + alcance; i++) {
+            memoriaP[i] = null;
+        }
+    }
+
     public void limpiar() {
-        //Llena todo el array con null
         Arrays.fill(memoriaP, null);
     }
     
@@ -52,23 +74,8 @@ public class Memoria {
         return memoriaP.length;
     }
     
-    public void setEspacioKernel(int espacioK) {
-        if (espacioK<= 0 || espacioK >= tamanio) {
-            throw new IllegalArgumentException("El espacio de kernel ingresado es inválido.");
-        }
-        this.espacioKernel = espacioK;
-    }
-    
     public int getEspacioKernel() {
         return espacioKernel;
-    }
-    
-    public void setMemoriaP(int tamanio) {
-        if (tamanio < 128) {
-            throw new IllegalArgumentException("La memoria debe ser mínimo de 128");
-        }
-        this.memoriaP = new String[tamanio];
-        this.tamanio = tamanio;
     }
     
     public String[] getMemoriaP() {
