@@ -124,14 +124,22 @@ public class ManejadorInstrucciones {
 
     private void ejecutarINC(Instruccion instruccion) {
         String registro = instruccion.getOperando1();
-        int valorRegistro = cpu.getRegistro(registro);
-        cpu.setRegistro(registro, valorRegistro + 1);
+        if (registro == null) {
+            cpu.setAC(cpu.getAC() + 1);
+        } else {
+            int valorRegistro = cpu.getRegistro(registro);
+            cpu.setRegistro(registro, valorRegistro + 1);
+        }
     }
 
     private void ejecutarDEC(Instruccion instruccion) {
         String registro = instruccion.getOperando1();
-        int valorRegistro = cpu.getRegistro(registro);
-        cpu.setRegistro(registro, valorRegistro - 1);
+        if (registro == null) {
+            cpu.setAC(cpu.getAC() - 1);
+        } else {
+            int valorRegistro = cpu.getRegistro(registro);
+            cpu.setRegistro(registro, valorRegistro - 1);
+        }
     }
 
     private void ejecutarSWAP(Instruccion instruccion) {

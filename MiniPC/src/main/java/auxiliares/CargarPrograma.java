@@ -12,20 +12,23 @@ import modelo.Memoria;
  * @author erinc
  */
 public class CargarPrograma {
-    public void cargar(Programa programa, Memoria memoria, int posicionInicial) {
-        int cantidadInstrucciones = programa.getCantInstrucciones();
-        if (posicionInicial < memoria.getEspacioKernel()) {
-            throw new IllegalArgumentException("El programa no puede cargarse en el kernel");
-        }
-        if (posicionInicial + cantidadInstrucciones > memoria.getTamanio()) {
-            throw new IllegalArgumentException("No hay suficiente espacio en memoria");
-        }
+    private AdministradorMemoria adminMemoria;
 
-        int posicion = posicionInicial;
+    public CargarPrograma(AdministradorMemoria adminMemoria) {
+        this.adminMemoria = adminMemoria;
+    }
+
+    public int cargar(Programa programa, Memoria memoria) {
+        int cantidadInstrucciones = programa.getCantInstrucciones();
+        int base = adminMemoria.buscarEspacio(memoria, cantidadInstrucciones);
+        if (base == -1) {
+            throw new IllegalStateException("No hay suficiente espacio en memoria para cargar el programa");
+        }
+        int posicion = base;
         for (Instruccion instruccion : programa.getInstrucciones()) {
-            String contenido = instruccion.getEntradaTexto();
-            memoria.escribir(posicion, contenido);
+            memoria.escribir(posicion, instruccion.getEntradaTexto());
             posicion++;
         }
+        return base;
     }
 }
