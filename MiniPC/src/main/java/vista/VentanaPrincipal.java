@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
+import controlador.MiniPCControlador;
 import modelo.ConfiguracionSistema;
 
 public class VentanaPrincipal extends JFrame {
@@ -1699,6 +1700,8 @@ public class VentanaPrincipal extends JFrame {
 
                     VentanaPrincipal ventana =
                             new VentanaPrincipal();
+
+                    new MiniPCControlador(ventana);
 
                     ventana.setVisible(true);
                 }

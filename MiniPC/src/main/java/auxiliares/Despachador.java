@@ -58,7 +58,7 @@ public class Despachador {
         return procesoActual;
     }
 
-    public boolean hayProcesoEnEjecucion() {
+    public boolean hayProcesoActual() {
         return procesoActual != null;
     }
 }

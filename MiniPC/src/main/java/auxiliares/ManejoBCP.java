@@ -20,7 +20,7 @@ public class ManejoBCP {
         this.listaBCP = new ArrayList<>();
     }
     
-    public BCP crearBCP(Memoria memoria,int pid, String estado, CPU cpu, int base, int alcance, int prioridad) {
+    public BCP crearBCP(Memoria memoria,int pid, CPU cpu, int base, int alcance, int prioridad) {
         int numeroProceso = listaBCP.size();
         int inicioBCP = numeroProceso * TAMANIO;
         if (inicioBCP + TAMANIO > memoria.getEspacioKernel()) {
@@ -128,5 +128,16 @@ public class ManejoBCP {
 
     public void limpiarBCP() {
         listaBCP.clear();
+    }
+
+    public int getTamanioBCP() {
+        return TAMANIO;
+    }
+
+    public void sincronizarBCP(Memoria memoria, int numeroProceso) {
+        if (numeroProceso < 0 || numeroProceso >= listaBCP.size()) {
+            throw new IllegalArgumentException("El proceso indicado no existe");
+        }
+        guardarEnMemoria(memoria, numeroProceso, listaBCP.get(numeroProceso));
     }
 }
