@@ -12,10 +12,11 @@ public class BCP {
     private int cx;
     private int dx;
     private String ir;
-    private final int base;
-    private final int alcance;
+    private int base;
+    private int alcance;
     //pila
-    private ArrayList<Integer> pila;
+    private Integer[] pila;
+    private int cantActPila;
     //informacion contable
     private int cpu;
     private long tiempoInicio;
@@ -26,6 +27,11 @@ public class BCP {
     private int siguienteBCP;
     //prioridad
     private int prioridad;
+
+    private int direccionBCP;
+    private int posicionIndiceKernel;
+    private String nombre;
+    private String ubicacion;
 
     public BCP(int pid, String estado, int base, int alcance, int prioridad) {
         this.pid = pid;
@@ -39,27 +45,46 @@ public class BCP {
         this.ir = "";
         this.base = base;
         this.alcance = alcance;
-        this.pila = new ArrayList<>();
+        this.cantActPila = 0;
+        this.pila = new Integer[5];
         this.archivosAbiertos = new ArrayList<>();
         this.siguienteBCP = -1;
         this.prioridad = prioridad;
         this.cpu = -1;
         this.tiempoInicio = 0;
         this.tiempoEmpleado = 0;
+        this.direccionBCP = -1;
+        this.posicionIndiceKernel = -1;
+        this.nombre = "";
+        this.ubicacion = "";
     }
 
     public void pushPila(int valor) {
-        if (pila.size() >= 5) {
+        if (cantActPila >= 5) {
             throw new IllegalStateException("La pila está llena (Desbordamiento de pila)");
         }
-        pila.add(valor);
+        pila[cantActPila] = valor;
+        cantActPila++;
     }
 
     public int popPila() {
-        if (pila.isEmpty()) {
+        if (cantActPila <= 0) {
             throw new IllegalStateException("La pila está vacía");
         }
-        return pila.remove(pila.size() - 1);
+        cantActPila--;
+        int valor = pila[cantActPila];
+        pila[cantActPila] = null; 
+        return valor;
+    }
+
+    public Integer getValorPila(int espacio) {
+        if (espacio < 0 || espacio >= 5) {
+            throw new IndexOutOfBoundsException("Índice fuera de los límites de la pila");
+        }
+        if (espacio >= cantActPila) {
+            return null;
+        }
+        return pila[espacio];
     }
 
     public void agregarArchivoAbierto(String archivo) {
@@ -100,6 +125,10 @@ public class BCP {
 
     public int getDx() {
         return dx;
+    }
+
+    public void setBase(int base) {
+        this.base = base;
     }
 
     public int getBase() {
@@ -147,7 +176,11 @@ public class BCP {
     }
 
     public ArrayList<Integer> getPila() {
-        return pila;
+        ArrayList<Integer> valores = new ArrayList<>();
+        for (int i = 0; i < cantActPila; i++) {
+            valores.add(this.pila[i]);
+        }
+        return valores;
     }
 
     public ArrayList<String> getArchivosAbiertos() {
@@ -192,5 +225,37 @@ public class BCP {
 
     public void setTiempoEmpleado(long tiempoEmpleado) {
         this.tiempoEmpleado = tiempoEmpleado;
+    }
+
+    public int getDireccionBCP() {
+        return direccionBCP;
+    }
+
+    public void setDireccionBCP(int direccionBCP) {
+        this.direccionBCP = direccionBCP;
+    }
+
+    public int getPosicionIndiceKernel() {
+        return posicionIndiceKernel;
+    }
+
+    public void setPosicionIndiceKernel(int posicionIndiceKernel) {
+        this.posicionIndiceKernel = posicionIndiceKernel;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getUbicacionPrograma() {
+        return ubicacion;
+    }
+
+    public void setUbicacionPrograma(String ubicacionPrograma) {
+        this.ubicacion = ubicacionPrograma;
     }
 }

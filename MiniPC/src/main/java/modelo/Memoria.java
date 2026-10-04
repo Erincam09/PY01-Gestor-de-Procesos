@@ -66,6 +66,14 @@ public class Memoria {
         }
     }
 
+    public void liberarKernel(int espacio) {
+        if (espacio >= 0 && espacio < espacioKernel) {
+            memoriaP[espacio] = null;
+        } else {
+            throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
+        }
+    }
+
     public void limpiar() {
         Arrays.fill(memoriaP, null);
     }
