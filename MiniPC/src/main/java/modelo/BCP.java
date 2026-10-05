@@ -8,6 +8,8 @@ public class BCP {
     private int pc;
     private int ac;
     private int ax;
+    private int al;
+    private int ah;
     private int bx;
     private int cx;
     private String dx;
@@ -41,6 +43,8 @@ public class BCP {
         this.pc = base;
         this.ac = 0;
         this.ax = 0;
+        this.al = 0;
+        this.ah = 0;
         this.bx = 0;
         this.cx = 0;
         this.dx = "";
@@ -118,6 +122,14 @@ public class BCP {
         return ax;
     }
 
+    public int getAl() {
+        return al;
+    }
+
+    public int getAh() {
+        return ah;
+    }
+
     public int getBx() {
         return bx;
     }
@@ -156,6 +168,14 @@ public class BCP {
 
     public void setAx(int ax) {
         this.ax = ax;
+    }
+
+    public void setAl(int al) {
+        this.al = al;
+    }
+
+    public void setAh(int ah) {
+        this.ah = ah;
     }
 
     public void setBx(int bx) {

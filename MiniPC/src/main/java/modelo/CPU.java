@@ -13,6 +13,8 @@ public class CPU {
     private int AC;
     
     private int AX;
+    private int AL;
+    private int AH;
     private int BX;
     private int CX;
     private String DX;
@@ -31,6 +33,8 @@ public class CPU {
     public void reiniciar() {
         AC = 0;
         AX = 0;
+        AL = 0;
+        AH = 0;
         BX = 0;
         CX = 0;
         DX = "";
@@ -43,6 +47,10 @@ public class CPU {
         registro = registro.toUpperCase();
         if (registro.equals("AX")) {
             return AX;
+        } else if (registro.equals("AL")) {
+            return AL;
+        } else if (registro.equals("AH")) {
+            return AH;
         } else if (registro.equals("BX")) {
             return BX;
         } else if (registro.equals("CX")) {
@@ -58,6 +66,10 @@ public class CPU {
         registro = registro.toUpperCase();
         if (registro.equals("AX")) {
             AX = valor;
+        } else if (registro.equals("AL")) {
+            AL = valor;
+        } else if (registro.equals("AH")) {
+            AH = valor;
         } else if (registro.equals("BX")) {
             BX = valor;
         } else if (registro.equals("CX")) {
@@ -70,7 +82,7 @@ public class CPU {
     }
     
     public void setIR(String ir) {
-        this.IR = ir;
+        this.IR = ir; 
     }
     
     public String getIR() {

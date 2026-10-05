@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class ManejoBCP {
 
     private static final int INDICES = 5;
-    private static final int TAMANIO = 22;
+    private static final int TAMANIO = 24;
 
     private ArrayList<BCP> listaBCP;
 
@@ -39,6 +39,8 @@ public class ManejoBCP {
         bcp.setPc(cpu.getPC());
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getRegistro("AX"));
+        bcp.setAl(cpu.getRegistro("AL"));
+        bcp.setAh(cpu.getRegistro("AH"));
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
         bcp.setDx(cpu.getDX());
@@ -124,6 +126,8 @@ public class ManejoBCP {
         bcp.setPc(cpu.getPC());
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getRegistro("AX"));
+        bcp.setAl(cpu.getRegistro("AL"));
+        bcp.setAh(cpu.getRegistro("AH"));
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
         bcp.setDx(cpu.getDX());
@@ -171,35 +175,37 @@ public class ManejoBCP {
         memoria.escribir(inicio + 2, "PC: " + bcp.getPc());
         memoria.escribir(inicio + 3, "AC: " + bcp.getAc());
         memoria.escribir(inicio + 4, "AX: " + bcp.getAx());
-        memoria.escribir(inicio + 5, "BX: " + bcp.getBx());
-        memoria.escribir(inicio + 6, "CX: " + bcp.getCx());
-        memoria.escribir(inicio + 7, "DX: " + bcp.getDx());
-        memoria.escribir(inicio + 8, "IR: " + bcp.getIr());
+        memoria.escribir(inicio + 5, "AH: " + bcp.getAh());
+        memoria.escribir(inicio + 6, "AL: " + bcp.getAl());
+        memoria.escribir(inicio + 7, "BX: " + bcp.getBx());
+        memoria.escribir(inicio + 8, "CX: " + bcp.getCx());
+        memoria.escribir(inicio + 9, "DX: " + bcp.getDx());
+        memoria.escribir(inicio + 10, "IR: " + bcp.getIr());
 
         for (int i = 0; i < 5; i++) {
             Integer valor = bcp.getValorPila(i);
 
             if (valor == null) {
-                memoria.escribir(inicio + 9 + i, "PILA " + i + ": VACIO");
+                memoria.escribir(inicio + 11 + i, "PILA " + i + ": VACIO");
             } else {
-                memoria.escribir(inicio + 9 + i, "PILA " + i + ": " + valor);
+                memoria.escribir(inicio + 11 + i, "PILA " + i + ": " + valor);
             }
         }
 
-        memoria.escribir(inicio + 14, "CPU: " + bcp.getCpu());
-        memoria.escribir(inicio + 15, "TIEMPO INICIO: " + bcp.getTiempoInicio());
-        memoria.escribir(inicio + 16, "TIEMPO EMPLEADO: " + bcp.getTiempoEmpleado());
+        memoria.escribir(inicio + 16, "CPU: " + bcp.getCpu());
+        memoria.escribir(inicio + 17, "TIEMPO INICIO: " + bcp.getTiempoInicio());
+        memoria.escribir(inicio + 18, "TIEMPO EMPLEADO: " + bcp.getTiempoEmpleado());
 
         if (bcp.getArchivosAbiertos().isEmpty()) {
-            memoria.escribir(inicio + 17, "ARCHIVOS ABIERTOS: NINGUNO");
+            memoria.escribir(inicio + 19, "ARCHIVOS ABIERTOS: NINGUNO");
         } else {
-            memoria.escribir(inicio + 17, "ARCHIVOS ABIERTOS: " + bcp.getArchivosAbiertos());
+            memoria.escribir(inicio + 19, "ARCHIVOS ABIERTOS: " + bcp.getArchivosAbiertos());
         }
 
-        memoria.escribir(inicio + 18, "SIGUIENTE BCP: " + bcp.getSiguienteBCP());
-        memoria.escribir(inicio + 19, "BASE: " + bcp.getBase());
-        memoria.escribir(inicio + 20, "ALCANCE: " + bcp.getAlcance());
-        memoria.escribir(inicio + 21, "PRIORIDAD: " + bcp.getPrioridad());
+        memoria.escribir(inicio + 20, "SIGUIENTE BCP: " + bcp.getSiguienteBCP());
+        memoria.escribir(inicio + 21, "BASE: " + bcp.getBase());
+        memoria.escribir(inicio + 22, "ALCANCE: " + bcp.getAlcance());
+        memoria.escribir(inicio + 23, "PRIORIDAD: " + bcp.getPrioridad());
     }
 
     private void guardarIndicePrograma(Memoria memoria, BCP bcp) {

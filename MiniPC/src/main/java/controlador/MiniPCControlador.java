@@ -735,6 +735,8 @@ public class MiniPCControlador {
         agregarDatoBCP(modelo, "IR", bcp.getIr());
         agregarDatoBCP(modelo, "AC", bcp.getAc());
         agregarDatoBCP(modelo, "AX", bcp.getAx());
+        agregarDatoBCP(modelo, "AL", bcp.getAl());
+        agregarDatoBCP(modelo, "AH", bcp.getAh());
         agregarDatoBCP(modelo, "BX", bcp.getBx());
         agregarDatoBCP(modelo, "CX", bcp.getCx());
         agregarDatoBCP(modelo, "DX", bcp.getDx());
