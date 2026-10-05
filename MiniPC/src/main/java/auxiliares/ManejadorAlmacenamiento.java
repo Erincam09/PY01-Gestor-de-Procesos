@@ -50,19 +50,10 @@ public class ManejadorAlmacenamiento {
             throw new IllegalArgumentException("El índice de archivos está lleno.");
         }
 
-        /*
-         * Los archivos normales usarán inicialmente
-         * una posición del almacenamiento.
-         */
         int inicio = buscarEspacio(1);
         if (inicio == -1) {
             throw new IllegalArgumentException( "No hay espacio disponible " + "en el almacenamiento.");
         }
-
-        /*
-         * Usamos cadena vacía y no null,
-         * porque la posición ya pertenece al archivo.
-         */
         almacenamiento.escribir(inicio, "");
         ArchivoSimulado archivo = new ArchivoSimulado(nombre, inicio, 1, "ARCHIVO");
         indice.add(archivo);
@@ -89,6 +80,9 @@ public class ManejadorAlmacenamiento {
 
     public String leerArchivo(String nombre) {
         ArchivoSimulado archivo = abrirArchivo(nombre);
+        if (archivo.getTipo().equals("PROGRAMA")) {
+            throw new IllegalArgumentException("No se puede leer un programa .asm " + "desde esta operación.");
+        }
         String contenido = "";
         for (int i = 0;  i < archivo.getTamanio();  i++) {
             String linea = almacenamiento.leer(archivo.getDireccionInicio() + i);
@@ -142,18 +136,9 @@ public class ManejadorAlmacenamiento {
     }
 
     private void actualizarIndice() {
-        /*
-         * Primero limpiamos solamente
-         * las posiciones reservadas al índice.
-         */
         for (int i = 0; i < almacenamiento.getTamanioIndice(); i++) {
             almacenamiento.liberar(i);
         }
-
-        /*
-         * Después volvemos a escribir
-         * todas las entradas existentes.
-         */
         for (int i = 0; i < indice.size(); i++) {
             ArchivoSimulado archivo = indice.get(i);
             String entrada = archivo.getNombre() + " | Dirección: " + archivo.getDireccionInicio() + " | Tamaño: " + archivo.getTamanio() + " | Tipo: " + archivo.getTipo();

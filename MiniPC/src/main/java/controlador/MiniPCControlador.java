@@ -389,7 +389,7 @@ public class MiniPCControlador {
                 break;
 
             case "10H":
-                vista.escribirPantalla(String.valueOf(cpu.getDX()));
+                vista.escribirPantalla(String.valueOf(cpu.getDX())); 
                 cpu.setPC(cpu.getPC() + 1);
                 break;
 
@@ -398,13 +398,65 @@ public class MiniPCControlador {
                 break;
 
             case "21H":
-                throw new UnsupportedOperationException(
-                        "INT 21H todavía no está implementada. Falta definir el manejo de AH y AL."
-                );
+                ejecutarInterrupcionArchivos(proceso);
+                break;
 
             default:
                 throw new IllegalArgumentException("Interrupción inválida: " + interrupcion);
         }
+    }
+
+    private void ejecutarInterrupcionArchivos(Proceso proceso) {
+        BCP bcp = proceso.getBcp();
+        String funcion = cpu.getAH();
+        String nombreArchivo = cpu.getDX();
+
+        if (nombreArchivo == null || nombreArchivo.isBlank()) {
+            throw new IllegalArgumentException("DX no contiene el nombre de un archivo.");
+        }
+        if (funcion.equals("3CH")) {
+            manejadorAlmacenamiento.crearArchivo(nombreArchivo);
+            vista.escribirPantalla("[INT 21H] Archivo creado: " + nombreArchivo + "\n");
+        } else if (funcion.equals("3DH")) {
+            manejadorAlmacenamiento.abrirArchivo(nombreArchivo);
+            bcp.agregarArchivoAbierto(nombreArchivo);
+            vista.escribirPantalla("[INT 21H] Archivo abierto: " + nombreArchivo + "\n");
+        } else if (funcion.equals("4DH")) {
+            if (!bcp.estaArchivoAbierto(nombreArchivo)) {
+                throw new IllegalStateException("El archivo " + nombreArchivo + " no está abierto por el proceso.");
+            }
+            String contenido = manejadorAlmacenamiento.leerArchivo(nombreArchivo);
+            if (contenido == null || contenido.isBlank()) {
+                throw new IllegalStateException("El archivo " + nombreArchivo + " está vacío.");
+            }
+            int valor;
+            try {
+                valor = Integer.parseInt(contenido.trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("El contenido del archivo no es numérico.");
+            }
+
+            cpu.setRegistro("AL", valor);
+            vista.escribirPantalla("[INT 21H] Lectura de " + nombreArchivo + ": " + valor + " guardado en AL\n");
+        } else if (funcion.equals("40H")) {
+            if (!bcp.estaArchivoAbierto(nombreArchivo)) {
+                throw new IllegalStateException(
+                        "El archivo " + nombreArchivo
+                        + " no está abierto por el proceso."
+                );
+            }
+            int valor = cpu.getRegistro("AL");
+            manejadorAlmacenamiento.escribirArchivo( nombreArchivo, String.valueOf(valor));
+            vista.escribirPantalla("[INT 21H] Se escribió " + valor + " en " + nombreArchivo + "\n");
+        } else if (funcion.equals("41H")) {
+            manejadorAlmacenamiento.eliminarArchivo(nombreArchivo);
+            bcp.eliminarArchivoAbierto(nombreArchivo);
+            vista.escribirPantalla("[INT 21H] Archivo eliminado: " + nombreArchivo + "\n");
+        } else {
+            throw new IllegalArgumentException("Función de INT 21H inválida: " + funcion);
+        }
+        cpu.setPC(cpu.getPC() + 1);
+        manejoBCP.sincronizarBCP(memoria, bcp);
     }
 
     private void ponerProcesoEnEsperaTeclado() {

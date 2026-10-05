@@ -22,8 +22,8 @@ public class Despachador {
         cpu.setAC(bcp.getAc());
         cpu.setRegistro("AX", bcp.getAx());
         cpu.setRegistro("AL", bcp.getAl());
-        cpu.setRegistro("AH", bcp.getAh());
-        cpu.setRegistro("BX", bcp.getBx());
+        cpu.setAH(bcp.getAh());
+        cpu.setRegistro("BX", bcp.getBx()); 
         cpu.setRegistro("CX", bcp.getCx());
         cpu.setDX(bcp.getDx());
         cpu.setIR(bcp.getIr());
@@ -40,7 +40,7 @@ public class Despachador {
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getRegistro("AX"));
         bcp.setAl(cpu.getRegistro("AL"));
-        bcp.setAh(cpu.getRegistro("AH"));
+        bcp.setAh(cpu.getAH());
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
         bcp.setDx(cpu.getDX());

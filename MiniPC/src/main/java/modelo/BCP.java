@@ -1,5 +1,6 @@
 package modelo;
 
+import java.lang.classfile.constantpool.StringEntry;
 import java.util.ArrayList;
 
 public class BCP {
@@ -9,7 +10,7 @@ public class BCP {
     private int ac;
     private int ax;
     private int al;
-    private int ah;
+    private String ah;
     private int bx;
     private int cx;
     private String dx;
@@ -44,7 +45,7 @@ public class BCP {
         this.ac = 0;
         this.ax = 0;
         this.al = 0;
-        this.ah = 0;
+        this.ah = "";
         this.bx = 0;
         this.cx = 0;
         this.dx = "";
@@ -102,6 +103,10 @@ public class BCP {
         archivosAbiertos.remove(archivo);
     }
 
+    public boolean estaArchivoAbierto(String archivo) {
+        return archivosAbiertos.contains(archivo);
+    }
+
     public int getPid() {
         return pid;
     }
@@ -126,7 +131,7 @@ public class BCP {
         return al;
     }
 
-    public int getAh() {
+    public String getAh() {
         return ah;
     }
 
@@ -174,7 +179,7 @@ public class BCP {
         this.al = al;
     }
 
-    public void setAh(int ah) {
+    public void setAh(String ah) {
         this.ah = ah;
     }
 

@@ -4,6 +4,8 @@
  */
 package modelo;
 
+import java.text.StringCharacterIterator;
+
 /**
  *
  * @author erinc
@@ -14,7 +16,7 @@ public class CPU {
     
     private int AX;
     private int AL;
-    private int AH;
+    private String AH;
     private int BX;
     private int CX;
     private String DX;
@@ -34,7 +36,7 @@ public class CPU {
         AC = 0;
         AX = 0;
         AL = 0;
-        AH = 0;
+        AH = "";
         BX = 0;
         CX = 0;
         DX = "";
@@ -49,8 +51,6 @@ public class CPU {
             return AX;
         } else if (registro.equals("AL")) {
             return AL;
-        } else if (registro.equals("AH")) {
-            return AH;
         } else if (registro.equals("BX")) {
             return BX;
         } else if (registro.equals("CX")) {
@@ -68,8 +68,6 @@ public class CPU {
             AX = valor;
         } else if (registro.equals("AL")) {
             AL = valor;
-        } else if (registro.equals("AH")) {
-            AH = valor;
         } else if (registro.equals("BX")) {
             BX = valor;
         } else if (registro.equals("CX")) {
@@ -103,6 +101,14 @@ public class CPU {
     
     public int getAC() {
         return AC;
+    }
+
+    public String getAH() {
+        return AH;
+    }
+
+    public void setAH(String AH) {
+        this.AH = AH;
     }
 
     public String getDX() {

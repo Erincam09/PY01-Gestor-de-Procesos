@@ -40,7 +40,7 @@ public class ManejoBCP {
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getRegistro("AX"));
         bcp.setAl(cpu.getRegistro("AL"));
-        bcp.setAh(cpu.getRegistro("AH"));
+        bcp.setAh(cpu.getAH());
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
         bcp.setDx(cpu.getDX());
@@ -127,7 +127,7 @@ public class ManejoBCP {
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getRegistro("AX"));
         bcp.setAl(cpu.getRegistro("AL"));
-        bcp.setAh(cpu.getRegistro("AH"));
+        bcp.setAh(cpu.getAH());
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
         bcp.setDx(cpu.getDX());

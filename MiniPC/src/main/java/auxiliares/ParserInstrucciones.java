@@ -38,15 +38,20 @@ public class ParserInstrucciones {
         }
         String textoOriginal = linea;
         linea = linea.replace(",", "");
-        while (linea.contains("  ")) {
-            linea = linea.replace("  ", " ");
-        }
-        String[] partes = linea.split(" ");
+        String[] partes = linea.split("\\s+");
         String operacion = partes[0].toUpperCase();
         if (operacion.equals("LOAD") || operacion.equals("STORE") || operacion.equals("ADD") || operacion.equals("SUB") || operacion.equals("PUSH") || operacion.equals("POP")) {
             return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), null);
         }
-        if (operacion.equals("MOV") || operacion.equals("SWAP") || operacion.equals("CMP")) {
+        if (operacion.equals("MOV")) {
+            String destino = partes[1].toUpperCase();
+            String origen = partes[2];
+            if (!origen.startsWith("\"")) {
+                origen = origen.toUpperCase();
+            }
+            return new Instruccion(textoOriginal, operacion, destino, origen);
+        }
+        if (operacion.equals("SWAP") || operacion.equals("CMP")) {
             return new Instruccion(textoOriginal, operacion, partes[1].toUpperCase(), partes[2].toUpperCase());
         }
         if (operacion.equals("INC") || operacion.equals("DEC")) {
@@ -77,10 +82,23 @@ public class ParserInstrucciones {
         if (linea.matches("(?i)^(LOAD|STORE|ADD|SUB|PUSH|POP)\\s+(AX|BX|CX|DX)$")) {
             return true;
         }
+        // MOV AH, 3CH
+        // MOV AH, 3DH
+        // MOV AH, 4DH
+        // MOV AH, 40H
+        // MOV AH, 41H
+        if (linea.matches("(?i)^MOV\\s+AH\\s*,\\s*(3CH|3DH|4DH|40H|41H)$")) {
+            return true;
+        }
         // MOV AX, 5
-        // MOV AX, -5
-        // MOV AX, BX
-        if (linea.matches("(?i)^MOV\\s+(AX|BX|CX|DX)\\s*,\\s*((AX|BX|CX|DX)|[+-]?\\d+)$")) {
+        // MOV AL, 25
+        // MOV BX, AX
+        // MOV DX, 20
+        if (linea.matches("(?i)^MOV\\s+(AX|AL|BX|CX|DX)\\s*,\\s*((AX|AL|BX|CX|DX)|[+-]?\\d+)$")) {
+            return true;
+        }
+        // MOV DX, "datos.txt"
+        if (linea.matches("(?i)^MOV\\s+DX\\s*,\\s*\"[^\"]+\"$")) {
             return true;
         }
         // SWAP AX, BX

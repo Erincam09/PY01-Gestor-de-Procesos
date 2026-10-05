@@ -92,6 +92,15 @@ public class ManejadorInstrucciones {
     private void ejecutarMOV(Instruccion instruccion) {
         String destino = instruccion.getOperando1();
         String origen = instruccion.getOperando2();
+        if (destino.equals("AH")) {
+            cpu.setAH(origen);
+            return;
+        }
+        if (destino.equals("DX") && origen.startsWith("\"") && origen.endsWith("\"")) {
+            String texto = origen.substring(1, origen.length() - 1);
+            cpu.setDX(texto);
+            return;
+        }
         int valor;
         if (esRegistro(origen)) {
             valor = cpu.getRegistro(origen);
@@ -198,7 +207,7 @@ public class ManejadorInstrucciones {
     }
 
     private boolean esRegistro(String operando) {
-        return operando.equals("AX") || operando.equals("BX") || operando.equals("CX") || operando.equals("DX");
+        return operando.equals("AX") || operando.equals("AL") || operando.equals("BX") || operando.equals("CX") || operando.equals("DX");
     }
 
     public int obtenerPeso(Instruccion instruccion) {
