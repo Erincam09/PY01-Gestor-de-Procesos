@@ -22,7 +22,7 @@ public class BCP {
     private int cantActPila;
     //informacion contable
     private int cpu;
-    private long tiempoInicio;
+    private String tiempoInicio;
     private long tiempoEmpleado;
     //Estado E/S
     private ArrayList<String> archivosAbiertos;
@@ -58,7 +58,7 @@ public class BCP {
         this.siguienteBCP = -1;
         this.prioridad = prioridad;
         this.cpu = -1;
-        this.tiempoInicio = 0;
+        this.tiempoInicio = "";
         this.tiempoEmpleado = 0;
         this.direccionBCP = -1;
         this.posicionIndiceKernel = -1;
@@ -239,11 +239,11 @@ public class BCP {
         this.cpu = cpu;
     }
 
-    public long getTiempoInicio() {
+    public String getTiempoInicio() {
         return tiempoInicio;
     }
 
-    public void setTiempoInicio(long tiempoInicio) {
+    public void setTiempoInicio(String tiempoInicio) {
         this.tiempoInicio = tiempoInicio;
     }
 
@@ -260,7 +260,7 @@ public class BCP {
     }
 
     public void setDireccionBCP(int direccionBCP) {
-        this.direccionBCP = direccionBCP;
+        this.direccionBCP = direccionBCP; 
     }
 
     public int getPosicionIndiceKernel() {
