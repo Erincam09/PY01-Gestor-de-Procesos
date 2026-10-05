@@ -120,6 +120,7 @@ public class MiniPCControlador {
         vista.getBtnEjecutarAutomatico().addActionListener(e -> iniciarAutomatico());
         vista.getBtnReiniciar().addActionListener(e -> reiniciarSistema());
         vista.getBtnEnviarEntrada().addActionListener(e -> enviarEntradaTeclado());
+        vista.getTxtEntradaTeclado().addActionListener(e -> enviarEntradaTeclado());
     }
 
     private void abrirConfiguracion() {
@@ -175,11 +176,6 @@ public class MiniPCControlador {
         int cargados = 0;
 
         for (File archivo : archivos) {
-            if (listaTrabajos.cantidadTrabajos() >= 5) {
-                errores.append("Se alcanzó el máximo de 5 programas por simulación.\n");
-                break;
-            }
-
             try {
                 List<String> lineas = manejadorArchivos.leer(archivo);
                 Programa programa = parser.analizar(archivo.getName(), lineas);
@@ -212,10 +208,7 @@ public class MiniPCControlador {
                 break;
             }
 
-            int cantidadBCP = manejoBCP.getListaBCP().size();
-            int espacioNecesario = (cantidadBCP + 1) * manejoBCP.getTamanioBCP();
-
-            if (espacioNecesario > memoria.getEspacioKernel()) {
+            if (!manejoBCP.hayEspacioParaBCP(memoria)) {
                 break;
             }
 
@@ -226,26 +219,50 @@ public class MiniPCControlador {
             }
 
             Programa programa = trabajo.getPrograma();
+            int alcance = programa.getCantInstrucciones();
+            int pid = siguientePid;
+
             int base = cargadorMemoria.cargar(programa, memoria);
 
-            if (base == -1) {
+            if (base != -1) {
+                CPU cpuInicial = new CPU();
+                cpuInicial.reiniciar();
+                cpuInicial.setPC(base);
+
+                BCP bcp = manejoBCP.crearBCP(memoria, pid, cpuInicial, base, alcance, 1, programa.getNombreArchivo(), "RAM");
+
+                bcp.setEstado("PREPARADO");
+                bcp.setDireccionVirtual(-1);
+                manejoBCP.sincronizarBCP(memoria, bcp);
+
+                Proceso proceso = new Proceso(programa, bcp);
+                listaProcesos.agregarProceso(proceso);
+
+                trabajo.setEstado("EN MEMORIA");
+                siguientePid++;
+                continue;
+            }
+
+            int direccionVirtual = memoriaVirtual.cargarPrograma(programa, pid);
+
+            if (direccionVirtual == -1) {
                 break;
             }
 
-            int alcance = programa.getCantInstrucciones();
-
             CPU cpuInicial = new CPU();
             cpuInicial.reiniciar();
-            cpuInicial.setPC(base);
-            BCP bcp = manejoBCP.crearBCP(memoria, siguientePid, cpuInicial, base, alcance, 1);
+            cpuInicial.setPC(-1);
+
+            BCP bcp = manejoBCP.crearBCP(memoria, pid, cpuInicial, -1, alcance, 1, programa.getNombreArchivo(), "VIRTUAL");
+            bcp.setDireccionVirtual(direccionVirtual);
+            bcp.setEstado("EN ESPERA");
+            bcp.setPc(-1);
+            manejoBCP.sincronizarBCP(memoria, bcp);
+
             Proceso proceso = new Proceso(programa, bcp);
-
             listaProcesos.agregarProceso(proceso);
-            trabajo.setEstado("EN MEMORIA");
 
-            int indiceProceso = listaProcesos.cantidadProcesos() - 1;
-            manejoBCP.actualizarBCP(memoria, indiceProceso, "PREPARADO", cpuInicial);
-
+            trabajo.setEstado("EN MEMORIA VIRTUAL");
             siguientePid++;
         }
     }
@@ -255,19 +272,10 @@ public class MiniPCControlador {
             return true;
         }
 
-        for (int i = 0; i < listaProcesos.cantidadProcesos(); i++) {
-            Proceso proceso = listaProcesos.obtenerProceso(i);
-
+        for (Proceso proceso : listaProcesos.getProcesos()) {
             if (proceso.getBcp().getEstado().equals("PREPARADO")) {
                 despachador.despachar(proceso);
-                manejoBCP.actualizarBCP(memoria, i, "EJECUCION", cpu);
-
-                instruccionActual = null;
-                pesoActual = -1;
-                tiempoRestante = -1;
-
-                vista.setEstadoSistema("Ejecutando PID " + proceso.getPid());
-
+                manejoBCP.actualizarBCP(memoria, proceso.getBcp(), "EJECUCION", cpu);
                 return true;
             }
         }
@@ -306,9 +314,7 @@ public class MiniPCControlador {
 
                 if (despachador.hayProcesoActual()) {
                     Proceso actual = despachador.getProcesoActual();
-                    int indice = obtenerIndiceProceso(actual);
-
-                    manejoBCP.actualizarBCP(memoria, indice, "EJECUCION", cpu);
+                    manejoBCP.actualizarBCP(memoria, actual.getBcp(), "EJECUCION", cpu);
 
                     instruccionActual = null;
                     pesoActual = -1;
@@ -388,7 +394,7 @@ public class MiniPCControlador {
                 break;
 
             case "09H":
-                ponerProcesoEnEsperaTeclado(proceso);
+                ponerProcesoEnEsperaTeclado();
                 break;
 
             case "21H":
@@ -401,24 +407,30 @@ public class MiniPCControlador {
         }
     }
 
-    private void ponerProcesoEnEsperaTeclado(Proceso proceso) {
+    private void ponerProcesoEnEsperaTeclado() {
+        Proceso proceso = despachador.getProcesoActual();
+        if (proceso == null) {
+            return;
+        }
+        BCP bcp = proceso.getBcp();
         cpu.setPC(cpu.getPC() + 1);
+        despachador.retirarProceso("EN ESPERA");
+        bcp.setEstado("EN ESPERA");
+        bcp.setCpu(-1);
 
-        int indice = obtenerIndiceProceso(proceso);
-
-        despachador.retirarProceso("ESPERA");
-        manejoBCP.actualizarBCP(memoria, indice, "ESPERA", cpu);
-
+        manejoBCP.sincronizarBCP(memoria, bcp);
         procesoEsperandoEntrada = proceso;
-
         instruccionActual = null;
         pesoActual = -1;
         tiempoRestante = -1;
 
         detenerTimer();
-
-        vista.getBtnEnviarEntrada().setEnabled(true);
-        vista.setEstadoSistema("PID " + proceso.getPid() + " esperando teclado");
+        vista.escribirPantalla("\n[INT 09H] Entrada de teclado requerida.\n");
+        vista.escribirPantalla("Ingrese un número entre 0 y 255 y presione Enter.\n");
+        vista.setEstadoSistema("Esperando entrada de teclado...");
+        vista.getTxtEntradaTeclado().setEnabled(true);
+        vista.getTxtEntradaTeclado().requestFocusInWindow(); 
+        actualizarVistaCompleta();
     }
 
     private void enviarEntradaTeclado() {
@@ -455,52 +467,57 @@ public class MiniPCControlador {
         bcp.setEstado("PREPARADO");
         bcp.setCpu(-1);
 
-        int indice = obtenerIndiceProceso(procesoEsperandoEntrada);
-
-        manejoBCP.sincronizarBCP(memoria, indice);
-
+        manejoBCP.sincronizarBCP(memoria, bcp);
+        vista.escribirPantalla("> Entrada recibida: " + valor + "\n");
+        vista.escribirPantalla("[INT 09H] Interrupción atendida. El proceso continúa.\n\n");
         vista.getTxtEntradaTeclado().setText("");
-        vista.getBtnEnviarEntrada().setEnabled(false);
-
-        vista.setEstadoSistema(
-                "Entrada recibida para PID " + procesoEsperandoEntrada.getPid()
-        );
-
+        vista.getTxtEntradaTeclado().setEnabled(false);
         procesoEsperandoEntrada = null;
-
+        vista.setEstadoSistema("Proceso preparado");
         actualizarVistaCompleta();
     }
 
     private void finalizarProceso(Proceso proceso) {
-        int indice = obtenerIndiceProceso(proceso);
+        if (proceso == null) {
+            return;
+        }
+        BCP bcp = proceso.getBcp();
+        Programa programa = proceso.getPrograma();
+        int pid = bcp.getPid();
 
-        despachador.retirarProceso("FINALIZADO");
-        manejoBCP.actualizarBCP(memoria, indice, "FINALIZADO", cpu);
+        if (despachador.hayProcesoActual()) {
+            despachador.retirarProceso("FINALIZADO");
+        }
+        bcp.setEstado("FINALIZADO");
+        bcp.setCpu(-1);
+        manejoBCP.sincronizarBCP(memoria, bcp);
 
-        memoria.liberarProceso(
-                proceso.getBcp().getBase(),
-                proceso.getBcp().getAlcance()
-        );
+        if (bcp.getBase() >= memoria.getEspacioKernel()) {
+            memoria.liberarProceso(
+                    bcp.getBase(),
+                    bcp.getAlcance()
+            );
+        }
+        if (bcp.getDireccionVirtual() != -1) {
+            memoriaVirtual.liberarRango(
+                    bcp.getDireccionVirtual(),
+                    bcp.getAlcance()
+            );
+        }
 
-        memoriaVirtual.liberarProceso(proceso.getPid());
-
-        Trabajo trabajo = buscarTrabajo(proceso.getPrograma());
-
+        Trabajo trabajo = buscarTrabajo(programa);
         if (trabajo != null) {
             trabajo.setEstado("FINALIZADO");
         }
+        manejoBCP.liberarBCP(memoria, pid);
+        listaProcesos.eliminarProceso(proceso);
 
         instruccionActual = null;
-        pesoActual = -1;
-        tiempoRestante = -1;
-
+        pesoActual = 0;
+        tiempoRestante = 0;
+        intentarPasarVirtualARAM();
         admitirTrabajos();
-
-        if (todosTrabajosFinalizados()) {
-            finalizarSimulacion();
-        } else {
-            vista.setEstadoSistema("PID " + proceso.getPid() + " finalizado");
-        }
+        actualizarVistaCompleta();
     }
 
     private Trabajo buscarTrabajo(Programa programa) {
@@ -576,16 +593,6 @@ public class MiniPCControlador {
         }
 
         return false;
-    }
-
-    private int obtenerIndiceProceso(Proceso proceso) {
-        for (int i = 0; i < listaProcesos.cantidadProcesos(); i++) {
-            if (listaProcesos.obtenerProceso(i) == proceso) {
-                return i;
-            }
-        }
-
-        throw new IllegalArgumentException("El proceso no se encuentra en la lista de procesos.");
     }
 
     private void finalizarSimulacion() {
@@ -775,5 +782,47 @@ public class MiniPCControlador {
         vista.getBtnEjecutarAutomatico().setEnabled(puedeEjecutar && !automatico);
         vista.getBtnReiniciar().setEnabled(hayDatos);
         vista.getBtnEnviarEntrada().setEnabled(procesoEsperandoEntrada != null);
+    }
+
+    private void intentarPasarVirtualARAM() {
+        for (Proceso proceso : listaProcesos.getProcesos()) {
+            BCP bcp = proceso.getBcp();
+
+            if (!bcp.getEstado().equals("EN ESPERA")) {
+                continue;
+            }
+
+            if (bcp.getDireccionVirtual() == -1) {
+                continue;
+            }
+
+            Programa programa = proceso.getPrograma();
+            int base = cargadorMemoria.cargar(programa, memoria);
+
+            if (base == -1) {
+                continue;
+            }
+
+            int direccionVirtual = bcp.getDireccionVirtual();
+
+            memoriaVirtual.liberarRango(
+                    direccionVirtual,
+                    programa.getCantInstrucciones()
+            );
+
+            bcp.setDireccionVirtual(-1);
+            bcp.setBase(base);
+            bcp.setPc(base);
+            bcp.setEstado("PREPARADO");
+            bcp.setUbicacionPrograma("RAM");
+
+            manejoBCP.sincronizarBCP(memoria, bcp);
+
+            Trabajo trabajo = buscarTrabajo(programa);
+
+            if (trabajo != null) {
+                trabajo.setEstado("EN MEMORIA");
+            }
+        }
     }
 }

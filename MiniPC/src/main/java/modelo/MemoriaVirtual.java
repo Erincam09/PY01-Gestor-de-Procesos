@@ -81,4 +81,44 @@ public class MemoriaVirtual {
     public AlmacenamientoSecundario getAlmacenamiento() {
         return almacenamiento;
     }
+
+    public int buscarEspacioContinuo(int cantidad) {
+        if (cantidad <= 0 || cantidad > getTamanio()) {
+            return -1;
+        }
+        for (int inicio = 0; inicio <= getTamanio() - cantidad; inicio++) {
+            boolean libre = true;
+
+            for (int i = 0; i < cantidad; i++) {
+                if (!estaLibre(inicio + i)) {
+                    libre = false;
+                    break;
+                }
+            }
+            if (libre) {
+                return inicio;
+            }
+        }
+
+        return -1;
+    }
+
+    public int cargarPrograma(Programa programa, int pid) {
+        int cantidad = programa.getCantInstrucciones();
+        int inicio = buscarEspacioContinuo(cantidad);
+        if (inicio == -1) {
+            return -1;
+        }
+        for (int i = 0; i < cantidad; i++) {
+            String instruccion = programa.getInstrucciones().get(i).getEntradaTexto();
+            escribir(inicio + i, instruccion, pid);
+        }
+        return inicio;
+    }
+
+    public void liberarRango(int inicio, int cantidad) {
+        for (int i = 0; i < cantidad; i++) {
+            liberar(inicio + i);
+        }
+    }
 }

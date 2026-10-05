@@ -49,4 +49,8 @@ public class ListaProcesos {
     public void limpiar() {
         procesos.clear();
     }
+
+    public void eliminarProceso(Proceso proceso) {
+        procesos.remove(proceso);
+    }
 }

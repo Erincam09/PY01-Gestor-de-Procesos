@@ -33,6 +33,8 @@ public class BCP {
     private String nombre;
     private String ubicacion;
 
+    private int direccionVirtual;
+
     public BCP(int pid, String estado, int base, int alcance, int prioridad) {
         this.pid = pid;
         this.estado = estado;
@@ -57,6 +59,7 @@ public class BCP {
         this.posicionIndiceKernel = -1;
         this.nombre = "";
         this.ubicacion = "";
+        this.direccionVirtual = -1;
     }
 
     public void pushPila(int valor) {
@@ -257,5 +260,13 @@ public class BCP {
 
     public void setUbicacionPrograma(String ubicacionPrograma) {
         this.ubicacion = ubicacionPrograma;
+    }
+
+    public int getDireccionVirtual() {
+        return direccionVirtual;
+    }
+
+    public void setDireccionVirtual(int direccionVirtual) {
+        this.direccionVirtual = direccionVirtual;
     }
 }
