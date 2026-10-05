@@ -9,13 +9,14 @@ public class ConfiguracionSistema {
     public ConfiguracionSistema() {
         memoriaPrincipal = 256;
         almacenamientoSecundario = 512;
-        memoriaVirtual = 64;
     }
 
-    public ConfiguracionSistema(int memoriaPrincipal, int almacenamientoSecundario, int memoriaVirtual) {
+    public ConfiguracionSistema(int memoriaPrincipal, int almacenamientoSecundario) {
         this.memoriaPrincipal = memoriaPrincipal;
+        if (almacenamientoSecundario < 512) {
+            throw new IllegalArgumentException("El almacenamiento secundario debe ser al menos 512");
+        }
         this.almacenamientoSecundario = almacenamientoSecundario;
-        this.memoriaVirtual = memoriaVirtual;
     }
 
     public int getMemoriaPrincipal() {
@@ -31,15 +32,14 @@ public class ConfiguracionSistema {
     }
 
     public void setAlmacenamientoSecundario(int almacenamientoSecundario) {
+        if (almacenamientoSecundario < 512) {
+            throw new IllegalArgumentException("El almacenamiento secundario debe ser al menos 512");
+        }
         this.almacenamientoSecundario = almacenamientoSecundario;
     }
 
     public int getMemoriaVirtual() {
-        return memoriaVirtual;
-    }
-
-    public void setMemoriaVirtual(int memoriaVirtual) {
-        this.memoriaVirtual = memoriaVirtual;
+        return almacenamientoSecundario / 8;
     }
 
     public int getEspacioKernel() {

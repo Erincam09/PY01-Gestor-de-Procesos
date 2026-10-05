@@ -78,7 +78,7 @@ public class MiniPCControlador {
 
     public MiniPCControlador(VentanaPrincipal vista) {
         this.vista = vista;
-        configuracion = new ConfiguracionSistema(256, 512, 64);
+        configuracion = new ConfiguracionSistema(256, 512);
         inicializarSistema();
         registrarEventos();
         actualizarVistaCompleta();
@@ -170,8 +170,7 @@ public class MiniPCControlador {
 
     private boolean mismaConfiguracion(ConfiguracionSistema otra) {
         return configuracion.getMemoriaPrincipal() == otra.getMemoriaPrincipal()
-                && configuracion.getAlmacenamientoSecundario() == otra.getAlmacenamientoSecundario()
-                && configuracion.getMemoriaVirtual() == otra.getMemoriaVirtual();
+                && configuracion.getAlmacenamientoSecundario() == otra.getAlmacenamientoSecundario();
     }
 
     private void cargarArchivos() {
