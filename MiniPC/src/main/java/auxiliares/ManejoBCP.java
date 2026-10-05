@@ -41,7 +41,7 @@ public class ManejoBCP {
         bcp.setAx(cpu.getRegistro("AX"));
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
-        bcp.setDx(cpu.getRegistro("DX"));
+        bcp.setDx(cpu.getDX());
         bcp.setIr(cpu.getIR());
 
         bcp.setCpu(-1);
@@ -126,7 +126,7 @@ public class ManejoBCP {
         bcp.setAx(cpu.getRegistro("AX"));
         bcp.setBx(cpu.getRegistro("BX"));
         bcp.setCx(cpu.getRegistro("CX"));
-        bcp.setDx(cpu.getRegistro("DX"));
+        bcp.setDx(cpu.getDX());
         bcp.setIr(cpu.getIR());
 
         if (estado.equals("EJECUCION")) {

@@ -389,7 +389,7 @@ public class MiniPCControlador {
                 break;
 
             case "10H":
-                vista.escribirPantalla(String.valueOf(cpu.getRegistro("DX")));
+                vista.escribirPantalla(String.valueOf(cpu.getDX()));
                 cpu.setPC(cpu.getPC() + 1);
                 break;
 
@@ -463,7 +463,7 @@ public class MiniPCControlador {
 
         BCP bcp = procesoEsperandoEntrada.getBcp();
 
-        bcp.setDx(valor);
+        bcp.setDx(String.valueOf(valor));
         bcp.setEstado("PREPARADO");
         bcp.setCpu(-1);
 

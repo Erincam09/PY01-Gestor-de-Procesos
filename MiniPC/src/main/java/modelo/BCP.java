@@ -10,7 +10,7 @@ public class BCP {
     private int ax;
     private int bx;
     private int cx;
-    private int dx;
+    private String dx;
     private String ir;
     private int base;
     private int alcance;
@@ -43,7 +43,7 @@ public class BCP {
         this.ax = 0;
         this.bx = 0;
         this.cx = 0;
-        this.dx = 0;
+        this.dx = "";
         this.ir = "";
         this.base = base;
         this.alcance = alcance;
@@ -126,7 +126,7 @@ public class BCP {
         return cx;
     }
 
-    public int getDx() {
+    public String getDx() {
         return dx;
     }
 
@@ -166,7 +166,7 @@ public class BCP {
         this.cx = cx;
     }
 
-    public void setDx(int dx) {
+    public void setDx(String dx) {
         this.dx = dx;
     }
 

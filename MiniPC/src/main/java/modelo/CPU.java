@@ -15,7 +15,7 @@ public class CPU {
     private int AX;
     private int BX;
     private int CX;
-    private int DX;
+    private String DX;
     
     //Program Counter
     private int PC;
@@ -33,13 +33,14 @@ public class CPU {
         AX = 0;
         BX = 0;
         CX = 0;
-        DX = 0;
+        DX = "";
         PC = 0;
         IR = "";
         comparacionIgual = false;
     }
     
     public int getRegistro(String registro) {
+        registro = registro.toUpperCase();
         if (registro.equals("AX")) {
             return AX;
         } else if (registro.equals("BX")) {
@@ -47,13 +48,14 @@ public class CPU {
         } else if (registro.equals("CX")) {
             return CX;
         } else if (registro.equals("DX")) {
-            return DX;
+            return getDXComoEntero();
         } else {
             throw new IllegalArgumentException("Registro inválido");
         }
     }
     
     public void setRegistro(String registro, int valor) {
+        registro = registro.toUpperCase();
         if (registro.equals("AX")) {
             AX = valor;
         } else if (registro.equals("BX")) {
@@ -61,7 +63,7 @@ public class CPU {
         } else if (registro.equals("CX")) {
             CX = valor;
         } else if (registro.equals("DX")) {
-            DX = valor;
+            DX = String.valueOf(valor);
         } else {
             throw new IllegalArgumentException("Registro inválido");
         }
@@ -89,6 +91,35 @@ public class CPU {
     
     public int getAC() {
         return AC;
+    }
+
+    public String getDX() {
+        return DX;
+    }
+
+    public void setDX(String DX) {
+        this.DX = DX;
+    }
+
+    public boolean dxEsNumerico() {
+        if (DX == null || DX.isBlank()) {
+            return false;
+        }
+
+        try {
+            Integer.parseInt(DX);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public int getDXComoEntero() {
+        if (!dxEsNumerico()) {
+            throw new IllegalStateException("DX no contiene un valor numérico: " + DX);
+        }
+
+        return Integer.parseInt(DX);
     }
 
     public boolean isComparacionIgual() {
