@@ -4,8 +4,6 @@
  */
 package modelo;
 
-import java.text.StringCharacterIterator;
-
 /**
  *
  * @author erinc

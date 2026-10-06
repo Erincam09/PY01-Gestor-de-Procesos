@@ -67,6 +67,7 @@ public class VentanaPrincipal extends JFrame {
     private JButton btnSiguiente;
     private JButton btnEjecutarAutomatico;
     private JButton btnReiniciar;
+    private JButton btnEstadisticas;
 
     private JLabel lblEstadoSistema;
     private JLabel lblProcesoActual;
@@ -816,9 +817,12 @@ public class VentanaPrincipal extends JFrame {
                 "Reiniciar"
         );
 
+        btnEstadisticas = crearBotonSecundario("Estadísticas");
+
         botones.add(btnSiguiente);
         botones.add(btnEjecutarAutomatico);
         botones.add(btnReiniciar);
+        botones.add(btnEstadisticas);
 
         JPanel informacion = new JPanel(
                 new FlowLayout(
@@ -1471,25 +1475,15 @@ public class VentanaPrincipal extends JFrame {
     // =================================================
 
     private void configurarVentana() {
-
-        setMinimumSize(
-                new Dimension(
-                        1220,
-                        760
-                )
-        );
-
-        setSize(
-                1480,
-                900
-        );
-
+        setMinimumSize(new Dimension(1250, 760));
+        setSize(1540, 940);
         setLocationRelativeTo(null);
 
         btnSiguiente.setEnabled(false);
         btnEjecutarAutomatico.setEnabled(false);
         btnReiniciar.setEnabled(false);
         btnEnviarEntrada.setEnabled(false);
+        btnEstadisticas.setEnabled(false);
     }
 
     // =================================================
@@ -1626,6 +1620,10 @@ public class VentanaPrincipal extends JFrame {
 
     public JButton getBtnReiniciar() {
         return btnReiniciar;
+    }
+
+    public JButton getBtnEstadisticas() {
+        return btnEstadisticas;
     }
 
     public JButton getBtnEnviarEntrada() {

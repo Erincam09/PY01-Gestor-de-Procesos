@@ -5,12 +5,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.awt.Font;
 
 import auxiliares.AdministradorMemoria;
 import auxiliares.CargarPrograma;
@@ -70,11 +72,11 @@ public class MiniPCControlador {
     private long tiempoCPU;
     private long tiempoSistema;
     private Timer timerEsperaInterrupcion;
-    private ArrayList<EstadisticaProceso> estadisticasProcesos;
+    private ArrayList<EstadisticaProceso> estadisticas;
     private boolean reanudarAutomaticoDespuesInterrupcion;
     private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    private Proceso procesoEsperandoEntrada;
+    private Proceso procesoEsperandoEntrada; 
 
     public MiniPCControlador(VentanaPrincipal vista) {
         this.vista = vista;
@@ -109,7 +111,7 @@ public class MiniPCControlador {
         manejadorInstrucciones = new ManejadorInstrucciones(cpu);
         manejadorAlmacenamiento = new ManejadorAlmacenamiento(disco);
 
-        estadisticasProcesos = new ArrayList<>();
+        estadisticas = new ArrayList<>();
 
         siguientePid = 1;
 
@@ -135,6 +137,7 @@ public class MiniPCControlador {
         vista.getBtnReiniciar().addActionListener(e -> reiniciarSistema());
         vista.getBtnEnviarEntrada().addActionListener(e -> enviarEntradaTeclado());
         vista.getTxtEntradaTeclado().addActionListener(e -> enviarEntradaTeclado());
+        vista.getBtnEstadisticas().addActionListener(e -> mostrarEstadisticas());
     }
 
     private void abrirConfiguracion() {
@@ -618,7 +621,7 @@ public class MiniPCControlador {
         String horaFin =
         LocalTime.now().format(FORMATO_HORA);
         EstadisticaProceso estadistica = new EstadisticaProceso(bcp.getPid(), programa.getNombreArchivo(), bcp.getTiempoInicio(), horaFin, bcp.getTiempoEmpleado());
-        estadisticasProcesos.add(estadistica);
+        estadisticas.add(estadistica);
         manejoBCP.liberarBCP(memoria, pid);
         listaProcesos.eliminarProceso(proceso);
 
@@ -719,7 +722,6 @@ public class MiniPCControlador {
         tiempoRestante = -1;
 
         actualizarBotones();
-        mostrarEstadisticas();
     }
 
     private void actualizarVistaCompleta() {
@@ -890,6 +892,7 @@ public class MiniPCControlador {
     private void actualizarBotones() {
         boolean automatico = timerEjecucion != null && timerEjecucion.isRunning();
         boolean hayDatos = listaTrabajos.cantidadTrabajos() > 0;
+        boolean finalizada = todosTrabajosFinalizados();
 
         boolean puedeEjecutar = !todosTrabajosFinalizados()
                 && procesoEsperandoEntrada == null
@@ -899,6 +902,7 @@ public class MiniPCControlador {
         vista.getBtnEjecutarAutomatico().setEnabled(puedeEjecutar && !automatico);
         vista.getBtnReiniciar().setEnabled(hayDatos);
         vista.getBtnEnviarEntrada().setEnabled(procesoEsperandoEntrada != null);
+        vista.getBtnEstadisticas().setEnabled(finalizada && !estadisticas.isEmpty());
     }
 
     private void intentarPasarVirtualARAM() {
@@ -944,21 +948,45 @@ public class MiniPCControlador {
     }
 
     private void mostrarEstadisticas() {
-        if (estadisticasProcesos.isEmpty()) {
+        if (estadisticas.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    vista,
+                    "No hay estadísticas disponibles.",
+                    "Estadísticas",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
             return;
         }
+
         StringBuilder texto = new StringBuilder();
-        texto.append("ESTADÍSTICAS DE EJECUCIÓN\n\n");
-        for (EstadisticaProceso estadistica : estadisticasProcesos) {
-            texto.append("PID: ").append(estadistica.getPid()).append("\n");
-            texto.append("Programa: ").append(estadistica.getPrograma()).append("\n");
-            texto.append("Inicio: ").append(estadistica.getHoraInicio()).append(" s\n");
-            texto.append("Fin: ").append(estadistica.getHoraFin()).append(" s\n");
-            texto.append("Tiempo empleado: ").append(estadistica.getTiempoEmpleado()).append(" s\n");
-            texto.append("-----------------------------\n");
+        texto.append("ESTADÍSTICAS DE LA SIMULACIÓN\n\n");
+
+        for (EstadisticaProceso e : estadisticas) {
+            texto.append("PID: ").append(e.getPid()).append("\n");
+            texto.append("Programa: ").append(e.getPrograma()).append("\n");
+            texto.append("Hora inicio: ").append(e.getHoraInicio()).append("\n");
+            texto.append("Hora final: ").append(e.getHoraFin()).append("\n");
+            texto.append("Tiempo empleado: ")
+                    .append(e.getTiempoEmpleado())
+                    .append(" s\n");
+            texto.append("--------------------------------\n");
         }
-        texto.append("\nTiempo total de CPU: ").append(tiempoCPU).append(" s");
-        texto.append("\nTiempo total del sistema: ").append(tiempoSistema).append(" s");
-        JOptionPane.showMessageDialog(vista, texto.toString(), "Estadísticas finales", JOptionPane.INFORMATION_MESSAGE);
+
+        texto.append("\nTiempo total de CPU: ")
+                .append(tiempoCPU)
+                .append(" s");
+
+        JTextArea area = new JTextArea(texto.toString());
+        area.setEditable(false);
+        area.setFont(new Font("Consolas", Font.PLAIN, 13));
+        area.setRows(18);
+        area.setColumns(38);
+
+        JOptionPane.showMessageDialog(
+                vista,
+                new JScrollPane(area),
+                "Estadísticas finales",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 }
