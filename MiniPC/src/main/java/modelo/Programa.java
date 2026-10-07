@@ -15,6 +15,14 @@ public class Programa {
     private final List<Instruccion> instrucciones;
     
     public Programa(String nombre, List<Instruccion> instrucciones) {
+        if (instrucciones == null || instrucciones.isEmpty()) {
+            throw new IllegalArgumentException("El programa debe contener al menos una instrucción.");
+        }
+        for (Instruccion instruccion : instrucciones) {
+            if (instruccion == null) {
+                throw new IllegalArgumentException("El programa contiene una instrucción inválida.");
+            }
+        }
         this.nombreArchivo = nombre;
         this.instrucciones = new ArrayList<>(instrucciones);
     }

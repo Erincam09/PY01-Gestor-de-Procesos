@@ -192,6 +192,13 @@ public class ManejadorInstrucciones {
     }
 
     private void ejecutarPARAM(Instruccion instruccion, BCP bcp) {
+        int cantidadParametros = instruccion.getParametros().size();
+        if (cantidadParametros > 3) {
+            throw new IllegalArgumentException("PARAM admite como máximo 3 parámetros");
+        }
+        if (bcp.getPila().size() + cantidadParametros > 5) {
+            throw new IllegalStateException("PARAM provoca desbordamiento de pila");
+        }
         for (Integer valor : instruccion.getParametros()) {
             bcp.pushPila(valor);
         }

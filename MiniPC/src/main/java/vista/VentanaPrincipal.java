@@ -7,9 +7,11 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import java.util.List;
 
 import controlador.MiniPCControlador;
 import modelo.ConfiguracionSistema;
+import modelo.EstadisticaProceso;
 
 public class VentanaPrincipal extends JFrame {
 
@@ -879,6 +881,93 @@ public class VentanaPrincipal extends JFrame {
 
         return barra;
     }
+
+    public void mostrarEstadisticas(List<EstadisticaProceso> estadisticas, long tiempoCPU, long tiempoSistema) {
+        JDialog dialogo = new JDialog(this, "Estadísticas finales", true);
+        dialogo.setSize(780, 520);
+        dialogo.setResizable(false);
+        dialogo.setLocationRelativeTo(this);
+
+        JPanel raiz = new JPanel(new BorderLayout(0, 14));
+        raiz.setBackground(FONDO);
+        raiz.setBorder(new EmptyBorder(16, 18, 16, 18));
+        dialogo.setContentPane(raiz);
+
+        JPanel encabezado = new JPanel();
+        encabezado.setLayout(new BoxLayout(encabezado, BoxLayout.Y_AXIS));
+        encabezado.setOpaque(false);
+
+        JLabel titulo = new JLabel("ESTADÍSTICAS DE LA SIMULACIÓN");
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titulo.setForeground(TEXTO);
+
+        JLabel subtitulo = new JLabel("Resumen de los procesos ejecutados y tiempos de la simulación");
+        subtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        subtitulo.setForeground(TEXTO_SEC);
+
+        encabezado.add(titulo);
+        encabezado.add(Box.createVerticalStrut(3));
+        encabezado.add(subtitulo);
+
+        raiz.add(encabezado, BorderLayout.NORTH);
+
+        JPanel centro = new JPanel(new BorderLayout(0, 12));
+        centro.setOpaque(false);
+
+        JPanel resumen = crearTarjeta();
+        resumen.setLayout(new GridLayout(1, 3, 10, 0));
+
+        resumen.add(crearIndicador("Procesos finalizados", String.valueOf(estadisticas.size())));
+        resumen.add(crearIndicador("Tiempo CPU", tiempoCPU + " s"));
+        resumen.add(crearIndicador("Tiempo sistema", tiempoSistema + " s"));
+
+        centro.add(resumen, BorderLayout.NORTH);
+
+        JPanel tarjetaTabla = crearTarjeta();
+        tarjetaTabla.setLayout(new BorderLayout(0, 8));
+
+        JLabel tituloTabla = new JLabel("Detalle por proceso");
+        tituloTabla.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        tituloTabla.setForeground(TEXTO);
+
+        DefaultTableModel modelo = modeloNoEditable(new Object[]{
+                "PID", "Programa", "Hora inicio", "Hora final", "Tiempo empleado"
+        });
+
+        for (EstadisticaProceso e : estadisticas) {
+                modelo.addRow(new Object[]{
+                e.getPid(),
+                e.getPrograma(),
+                e.getHoraInicio(),
+                e.getHoraFin(),
+                e.getTiempoEmpleado() + " s"
+                });
+        }
+
+        JTable tabla = crearTabla(modelo);
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(45);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(210);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(4).setPreferredWidth(120);
+
+        tarjetaTabla.add(tituloTabla, BorderLayout.NORTH);
+        tarjetaTabla.add(crearScroll(tabla), BorderLayout.CENTER);
+
+        centro.add(tarjetaTabla, BorderLayout.CENTER);
+        raiz.add(centro, BorderLayout.CENTER);
+
+        JPanel inferior = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        inferior.setOpaque(false);
+
+        JButton btnCerrar = crearBotonPrimario("Cerrar");
+        btnCerrar.addActionListener(e -> dialogo.dispose());
+
+        inferior.add(btnCerrar);
+        raiz.add(inferior, BorderLayout.SOUTH);
+
+        dialogo.setVisible(true);
+        }
 
     // =================================================
     // ESTILO

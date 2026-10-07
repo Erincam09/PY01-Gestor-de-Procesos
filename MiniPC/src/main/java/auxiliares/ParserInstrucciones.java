@@ -15,10 +15,16 @@ import modelo.Instruccion;
  */
 public class ParserInstrucciones {
     public Programa analizar(String nombreArchivo, List<String> lineas) {
+        if (lineas == null) {
+            throw new IllegalArgumentException("La lista de líneas no puede ser nula.");
+        }
         List<Instruccion> instrucciones = new ArrayList<>();
         int numeroLinea = 0;
         for (String linea : lineas) {
             numeroLinea++;
+            if (linea == null) {
+                throw new IllegalArgumentException("La línea " + numeroLinea + " es nula.");
+            }
             linea = linea.trim();
             if (linea.isEmpty()) {
                 continue;

@@ -39,6 +39,15 @@ public class BCP {
     private int direccionVirtual;
 
     public BCP(int pid, String estado, int base, int alcance, int prioridad) {
+        if (pid < 0) {
+            throw new IllegalArgumentException("El PID no puede ser negativo.");
+        }
+        if (base < -1) {
+            throw new IllegalArgumentException("La base del proceso es inválida.");
+        }
+        if (alcance <= 0) {
+            throw new IllegalArgumentException("El alcance del proceso debe ser mayor que cero.");
+        }
         this.pid = pid;
         this.estado = estado;
         this.pc = base;

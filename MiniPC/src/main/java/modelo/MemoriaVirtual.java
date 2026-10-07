@@ -104,6 +104,12 @@ public class MemoriaVirtual {
     }
 
     public int cargarPrograma(Programa programa, int pid) {
+        if (programa == null) {
+            throw new IllegalArgumentException("El programa no puede ser nulo.");
+        }
+        if (pid < 0) {
+            throw new IllegalArgumentException("El PID no puede ser negativo.");
+        }
         int cantidad = programa.getCantInstrucciones();
         int inicio = buscarEspacioContinuo(cantidad);
         if (inicio == -1) {
@@ -117,8 +123,11 @@ public class MemoriaVirtual {
     }
 
     public void liberarRango(int inicio, int cantidad) {
-        for (int i = 0; i < cantidad; i++) {
-            liberar(inicio + i);
+        if (inicio < 0 || cantidad <= 0 || inicio + cantidad > getTamanio()) {
+            throw new IllegalArgumentException("El rango de memoria virtual es inválido.");
+        }
+        for (int i = inicio; i < inicio + cantidad; i++) {
+            liberar(i);
         }
     }
 }

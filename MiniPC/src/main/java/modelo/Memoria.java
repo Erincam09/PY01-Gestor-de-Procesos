@@ -55,7 +55,7 @@ public class Memoria {
     }
     
     public void liberarProceso(int base, int alcance) {
-        if (base < espacioKernel || base > memoriaP.length) {
+        if (base < espacioKernel || alcance <= 0) {
             throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
         }
         if (base + alcance > memoriaP.length) {
@@ -72,6 +72,20 @@ public class Memoria {
         } else {
             throw new IllegalArgumentException("El espacio en memoria indicado es inválido.");
         }
+    }
+
+    public void escribirKernel(int posicion, String contenido) {
+        if (posicion < 0 || posicion >= espacioKernel) {
+            throw new IndexOutOfBoundsException("Posición fuera del espacio del Kernel.");
+        }
+        memoriaP[posicion] = contenido;
+    }
+
+    public boolean posicionKernelLibre(int posicion) {
+        if (posicion < 0 || posicion >= espacioKernel) {
+            return false;
+        }
+        return memoriaP[posicion] == null;
     }
 
     public void limpiar() {

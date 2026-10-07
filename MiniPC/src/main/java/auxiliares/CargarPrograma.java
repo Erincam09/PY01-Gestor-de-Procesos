@@ -19,10 +19,13 @@ public class CargarPrograma {
     }
 
     public int cargar(Programa programa, Memoria memoria) {
+        if (programa == null || memoria == null) {
+            throw new IllegalArgumentException("El programa y la memoria son obligatorios.");
+        }
         int cantidadInstrucciones = programa.getCantInstrucciones();
         int base = adminMemoria.buscarEspacio(memoria, cantidadInstrucciones);
         if (base == -1) {
-            throw new IllegalStateException("No hay suficiente espacio en memoria para cargar el programa");
+            return -1;
         }
         int posicion = base;
         for (Instruccion instruccion : programa.getInstrucciones()) {

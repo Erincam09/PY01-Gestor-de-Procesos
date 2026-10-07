@@ -4,15 +4,19 @@ import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTable;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.time.LocalTime;
 import java.awt.Font;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 import auxiliares.AdministradorMemoria;
 import auxiliares.CargarPrograma;
@@ -180,41 +184,42 @@ public class MiniPCControlador {
         JFileChooser selector = new JFileChooser();
         selector.setMultiSelectionEnabled(true);
         selector.setFileFilter(new FileNameExtensionFilter("Archivos ASM (*.asm)", "asm"));
-
         int opcion = selector.showOpenDialog(vista);
 
         if (opcion != JFileChooser.APPROVE_OPTION) {
             return;
         }
-
         File[] archivos = selector.getSelectedFiles();
         StringBuilder errores = new StringBuilder();
         int cargados = 0;
-
         for (File archivo : archivos) {
             try {
+                if (!hayEspacioParaNuevoTrabajo()) {
+                    errores.append(archivo.getName())
+                            .append(": No hay espacio suficiente en el Kernel para registrar otro trabajo.\n");
+                    break;
+                }
                 List<String> lineas = manejadorArchivos.leer(archivo);
                 Programa programa = parser.analizar(archivo.getName(), lineas);
 
                 manejadorAlmacenamiento.guardarPrograma(programa);
                 listaTrabajos.agregarTrabajo(programa);
 
+                sincronizarListaTrabajosKernel();
                 cargados++;
+
             } catch (Exception e) {
                 errores.append(archivo.getName()).append(": ").append(e.getMessage()).append("\n");
             }
         }
-
         admitirTrabajos();
 
         if (cargados > 0) {
             vista.setEstadoSistema(cargados + " programa(s) cargado(s)");
         }
-
         if (errores.length() > 0) {
-            JOptionPane.showMessageDialog(vista, errores.toString(), "Resultado de la carga", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(vista, errores.toString(),"Resultado de la carga",JOptionPane.WARNING_MESSAGE);
         }
-
         actualizarVistaCompleta();
     }
 
@@ -237,6 +242,12 @@ public class MiniPCControlador {
             Programa programa = trabajo.getPrograma();
             int alcance = programa.getCantInstrucciones();
             int pid = siguientePid;
+
+            int capacidadUsuario = memoria.getTamanio() - memoria.getEspacioKernel();
+            if (alcance > capacidadUsuario && alcance > memoriaVirtual.getTamanio()) {
+                trabajo.setEstado("RECHAZADO");
+                continue;
+            }
 
             int base = cargadorMemoria.cargar(programa, memoria);
 
@@ -322,7 +333,10 @@ public class MiniPCControlador {
                 }
             }
 
-            prepararInstruccionActual();
+            if (!prepararInstruccionActual()) {
+                actualizarVistaCompleta();
+                return;
+            }
 
             tiempoCPU++;
             tiempoSistema++;
@@ -363,32 +377,43 @@ public class MiniPCControlador {
         }
     }
 
-    private void prepararInstruccionActual() {
+    private boolean prepararInstruccionActual() {
         if (instruccionActual != null) {
-            return;
+            return true;
         }
-
         Proceso proceso = despachador.getProcesoActual();
-
         if (proceso == null) {
-            return;
+            return false;
         }
 
         BCP bcp = proceso.getBcp();
         Programa programa = proceso.getPrograma();
-
         int indice = cpu.getPC() - bcp.getBase();
-
-        if (indice < 0 || indice >= programa.getCantInstrucciones()) {
+        if (indice < 0) {
             throw new IllegalStateException(
-                    "El PC salió del rango del proceso " + bcp.getPid()
-                    + ". Verifique que el programa finalice con INT 20H."
+                    "El PC salió del rango del proceso " + bcp.getPid() + "."
             );
+        }
+
+        if (indice >= programa.getCantInstrucciones()) {
+            JOptionPane.showMessageDialog(
+                    vista,
+                    "El programa " + programa.getNombreArchivo()
+                    + " llegó al final sin ejecutar INT 20H.\n"
+                    + "El proceso PID " + bcp.getPid()
+                    + " será finalizado de forma forzada por fin de programa.",
+                    "Finalización sin INT 20H",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            finalizarProceso(proceso);
+            return false;
         }
 
         instruccionActual = programa.getInstrucciones().get(indice);
         pesoActual = manejadorInstrucciones.obtenerPeso(instruccionActual);
         tiempoRestante = pesoActual;
+
+        return true;
     }
 
     private void ejecutarInstruccionCompleta(Proceso proceso, Instruccion instruccion) {
@@ -646,6 +671,27 @@ public class MiniPCControlador {
         return null;
     }
 
+    private boolean hayEspacioParaNuevoTrabajo() {
+        int posicion = listaTrabajos.cantidadTrabajos();
+        if (posicion >= memoria.getEspacioKernel()) {
+            return false;
+        }
+        if (!memoria.estaLibre(posicion)) {
+            return false;
+        }
+        return posicion + 1 + manejoBCP.getTamanioBCP() <= memoria.getEspacioKernel();
+    }
+
+    private void sincronizarListaTrabajosKernel() {
+        int posicion = 0;
+
+        for (Trabajo trabajo : listaTrabajos.getTrabajos()) {
+            String contenido = "TRABAJO " + trabajo.getId() + " | " + trabajo.getPrograma().getNombreArchivo() + " | " + trabajo.getEstado();
+            memoria.escribir(posicion, contenido);
+            posicion++;
+        }
+    }
+
     private void iniciarAutomatico() {
         if (timerEjecucion != null && timerEjecucion.isRunning()) {
             return;
@@ -725,6 +771,7 @@ public class MiniPCControlador {
     }
 
     private void actualizarVistaCompleta() {
+        sincronizarListaTrabajosKernel();
         actualizarMemoria();
         actualizarDisco();
         actualizarMemoriaVirtual();
@@ -733,6 +780,7 @@ public class MiniPCControlador {
         actualizarBCPActual();
         actualizarInfoEjecucion();
         actualizarBotones();
+        resaltarInstruccionActualEnRAM();
     }
 
     private void actualizarMemoria() {
@@ -752,6 +800,26 @@ public class MiniPCControlador {
 
             modelo.addRow(new Object[]{i, contenido});
         }
+    }
+
+    private void resaltarInstruccionActualEnRAM() {
+        if (!despachador.hayProcesoActual()) {
+            vista.getTblMemoria().clearSelection();
+            return;
+        }
+        int direccion = cpu.getPC();
+        if (direccion < 0 || direccion >= memoria.getTamanio()) {
+            vista.getTblMemoria().clearSelection();
+            return;
+        }
+        int filaVista = vista.getTblMemoria().convertRowIndexToView(direccion);
+        if (filaVista == -1) {
+            return;
+        }
+        vista.getTblMemoria().setRowSelectionInterval(filaVista, filaVista);
+        vista.getTblMemoria().scrollRectToVisible(
+                vista.getTblMemoria().getCellRect(filaVista, 0, true)
+        );
     }
 
     private void actualizarDisco() {
@@ -958,35 +1026,6 @@ public class MiniPCControlador {
             return;
         }
 
-        StringBuilder texto = new StringBuilder();
-        texto.append("ESTADÍSTICAS DE LA SIMULACIÓN\n\n");
-
-        for (EstadisticaProceso e : estadisticas) {
-            texto.append("PID: ").append(e.getPid()).append("\n");
-            texto.append("Programa: ").append(e.getPrograma()).append("\n");
-            texto.append("Hora inicio: ").append(e.getHoraInicio()).append("\n");
-            texto.append("Hora final: ").append(e.getHoraFin()).append("\n");
-            texto.append("Tiempo empleado: ")
-                    .append(e.getTiempoEmpleado())
-                    .append(" s\n");
-            texto.append("--------------------------------\n");
-        }
-
-        texto.append("\nTiempo total de CPU: ")
-                .append(tiempoCPU)
-                .append(" s");
-
-        JTextArea area = new JTextArea(texto.toString());
-        area.setEditable(false);
-        area.setFont(new Font("Consolas", Font.PLAIN, 13));
-        area.setRows(18);
-        area.setColumns(38);
-
-        JOptionPane.showMessageDialog(
-                vista,
-                new JScrollPane(area),
-                "Estadísticas finales",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        vista.mostrarEstadisticas(estadisticas, tiempoCPU, tiempoSistema);
     }
 }

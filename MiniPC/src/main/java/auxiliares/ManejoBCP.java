@@ -1,31 +1,22 @@
 package auxiliares;
+
+import java.util.ArrayList;
 import modelo.BCP;
 import modelo.CPU;
 import modelo.Memoria;
-import java.util.ArrayList;
 
 public class ManejoBCP {
 
-    private static final int INDICES = 5;
     private static final int TAMANIO = 24;
-
     private ArrayList<BCP> listaBCP;
 
     public ManejoBCP() {
         listaBCP = new ArrayList<>();
     }
 
-    public BCP crearBCP(Memoria memoria, int pid, CPU cpu, int base, int alcance,
-            int prioridad, String nombrePrograma, String ubicacion) {
-
+    public BCP crearBCP(Memoria memoria, int pid, CPU cpu, int base, int alcance, int prioridad, String nombrePrograma, String ubicacion) {
         if (listaBCP.size() >= 5) {
             throw new IllegalArgumentException("Ya existen 5 procesos activos.");
-        }
-
-        int posicionIndice = buscarIndiceLibre(memoria);
-
-        if (posicionIndice == -1) {
-            throw new IllegalArgumentException("No hay espacio para otro índice en el Kernel.");
         }
 
         int direccionBCP = buscarEspacioBCP(memoria);
@@ -45,11 +36,10 @@ public class ManejoBCP {
         bcp.setCx(cpu.getRegistro("CX"));
         bcp.setDx(cpu.getDX());
         bcp.setIr(cpu.getIR());
-
         bcp.setCpu(-1);
 
         bcp.setDireccionBCP(direccionBCP);
-        bcp.setPosicionIndiceKernel(posicionIndice);
+        bcp.setPosicionIndiceKernel(-1);
         bcp.setNombre(nombrePrograma);
         bcp.setUbicacionPrograma(ubicacion);
 
@@ -60,60 +50,31 @@ public class ManejoBCP {
         }
 
         listaBCP.add(bcp);
-
-        guardarIndicePrograma(memoria, bcp);
         guardarEnMemoria(memoria, bcp);
 
         return bcp;
     }
 
-    /*
-     * Lo dejamos para que código anterior todavía
-     * pueda compilar mientras actualizamos el controlador.
-     */
-    public BCP crearBCP(Memoria memoria, int pid, CPU cpu, int base,
-            int alcance, int prioridad) {
-
+    public BCP crearBCP(Memoria memoria, int pid, CPU cpu, int base, int alcance, int prioridad) {
         String ubicacion = base >= 0 ? "RAM" : "VIRTUAL";
-
-        return crearBCP(
-                memoria,
-                pid,
-                cpu,
-                base,
-                alcance,
-                prioridad,
-                "Programa PID " + pid,
-                ubicacion
-        );
-    }
-
-    private int buscarIndiceLibre(Memoria memoria) {
-        for (int i = 0; i < INDICES; i++) {
-            if (memoria.estaLibre(i)) {
-                return i;
-            }
-        }
-
-        return -1;
+        return crearBCP(memoria, pid, cpu, base, alcance, prioridad, "Programa PID " + pid, ubicacion);
     }
 
     private int buscarEspacioBCP(Memoria memoria) {
-        int inicioKernelBCP = INDICES;
-        int limiteKernel = memoria.getEspacioKernel();
+        int inicio = memoria.getEspacioKernel() - TAMANIO;
 
-        for (int inicio = inicioKernelBCP; inicio + TAMANIO <= limiteKernel; inicio++) {
+        for (int posicion = inicio; posicion >= 0; posicion--) {
             boolean libre = true;
 
             for (int i = 0; i < TAMANIO; i++) {
-                if (!memoria.estaLibre(inicio + i)) {
+                if (!memoria.estaLibre(posicion + i)) {
                     libre = false;
                     break;
                 }
             }
 
             if (libre) {
-                return inicio;
+                return posicion;
             }
         }
 
@@ -122,7 +83,6 @@ public class ManejoBCP {
 
     public void actualizarBCP(Memoria memoria, BCP bcp, String estado, CPU cpu) {
         bcp.setEstado(estado);
-
         bcp.setPc(cpu.getPC());
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getRegistro("AX"));
@@ -140,12 +100,8 @@ public class ManejoBCP {
         }
 
         guardarEnMemoria(memoria, bcp);
-        guardarIndicePrograma(memoria, bcp);
     }
 
-    /*
-     * Compatibilidad temporal con el controlador anterior.
-     */
     public void actualizarBCP(Memoria memoria, int numeroProceso, String estado, CPU cpu) {
         if (numeroProceso < 0 || numeroProceso >= listaBCP.size()) {
             throw new IllegalArgumentException("Proceso inválido.");
@@ -156,7 +112,6 @@ public class ManejoBCP {
 
     public void sincronizarBCP(Memoria memoria, BCP bcp) {
         guardarEnMemoria(memoria, bcp);
-        guardarIndicePrograma(memoria, bcp);
     }
 
     public void sincronizarBCP(Memoria memoria, int numeroProceso) {
@@ -208,23 +163,7 @@ public class ManejoBCP {
         memoria.escribir(inicio + 23, "PRIORIDAD: " + bcp.getPrioridad());
     }
 
-    private void guardarIndicePrograma(Memoria memoria, BCP bcp) {
-        String indice =
-                "PID " + bcp.getPid()
-                + " | " + bcp.getNombre()
-                + " | " + bcp.getUbicacionPrograma()
-                + " | Base: " + bcp.getBase()
-                + " | Tamaño: " + bcp.getAlcance();
-
-        memoria.escribir(
-                bcp.getPosicionIndiceKernel(),
-                indice
-        );
-    }
-
-    public void actualizarIndicePrograma(Memoria memoria, int pid,
-            String ubicacion, int base) {
-
+    public void actualizarUbicacionPrograma(Memoria memoria, int pid, String ubicacion, int base) {
         BCP bcp = obtenerBCPPorPid(pid);
 
         if (bcp == null) {
@@ -234,17 +173,15 @@ public class ManejoBCP {
         bcp.setUbicacionPrograma(ubicacion);
         bcp.setBase(base);
 
-        /*
-         * Cuando el proceso pase de virtual a RAM,
-         * el PC inicial también debe apuntar a su
-         * nueva base si todavía no ha ejecutado.
-         */
         if (bcp.getEstado().equals("EN ESPERA")) {
             bcp.setPc(base);
         }
 
-        guardarIndicePrograma(memoria, bcp);
         guardarEnMemoria(memoria, bcp);
+    }
+
+    public void actualizarIndicePrograma(Memoria memoria, int pid, String ubicacion, int base) {
+        actualizarUbicacionPrograma(memoria, pid, ubicacion, base);
     }
 
     public void liberarBCP(Memoria memoria, int pid) {
@@ -260,12 +197,7 @@ public class ManejoBCP {
             memoria.liberarKernel(inicio + i);
         }
 
-        memoria.liberarKernel(
-                bcp.getPosicionIndiceKernel()
-        );
-
         listaBCP.remove(bcp);
-
         reconstruirEnlaces(memoria);
     }
 
@@ -274,9 +206,7 @@ public class ManejoBCP {
             BCP actual = listaBCP.get(i);
 
             if (i < listaBCP.size() - 1) {
-                actual.setSiguienteBCP(
-                        listaBCP.get(i + 1).getDireccionBCP()
-                );
+                actual.setSiguienteBCP(listaBCP.get(i + 1).getDireccionBCP());
             } else {
                 actual.setSiguienteBCP(-1);
             }
@@ -306,17 +236,11 @@ public class ManejoBCP {
     }
 
     public boolean hayEspacioParaBCP(Memoria memoria) {
-        return listaBCP.size() < 5
-                && buscarIndiceLibre(memoria) != -1
-                && buscarEspacioBCP(memoria) != -1;
+        return listaBCP.size() < 5 && buscarEspacioBCP(memoria) != -1;
     }
 
     public int getTamanioBCP() {
         return TAMANIO;
-    }
-
-    public int getCantidadIndices() {
-        return INDICES;
     }
 
     public ArrayList<BCP> getListaBCP() {
