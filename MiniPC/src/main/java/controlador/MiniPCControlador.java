@@ -4,19 +4,12 @@ import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.time.LocalTime;
-import java.awt.Font;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
 
 import auxiliares.AdministradorMemoria;
 import auxiliares.CargarPrograma;
@@ -244,7 +237,7 @@ public class MiniPCControlador {
             int pid = siguientePid;
 
             int capacidadUsuario = memoria.getTamanio() - memoria.getEspacioKernel();
-            if (alcance > capacidadUsuario && alcance > memoriaVirtual.getTamanio()) {
+            if (alcance > capacidadUsuario) {
                 trabajo.setEstado("RECHAZADO");
                 continue;
             }
@@ -739,7 +732,7 @@ public class MiniPCControlador {
         }
 
         for (Trabajo trabajo : listaTrabajos.getTrabajos()) {
-            if (!trabajo.getEstado().equals("FINALIZADO")) {
+            if (!trabajo.getEstado().equals("FINALIZADO") && !trabajo.getEstado().equals("RECHAZADO")) {
                 return false;
             }
         }
@@ -807,7 +800,7 @@ public class MiniPCControlador {
             vista.getTblMemoria().clearSelection();
             return;
         }
-        int direccion = cpu.getPC();
+        int direccion = cpu.getPC()-1;
         if (direccion < 0 || direccion >= memoria.getTamanio()) {
             vista.getTblMemoria().clearSelection();
             return;
